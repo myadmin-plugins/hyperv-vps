@@ -1,0 +1,29 @@
+{
+    "name": "detain/myadmin-hyperv-vps",
+    "type": "myadmin-plugin",
+    "description": "Hyperv Vps Class",
+    "keywords": ["hyperv","administration","license"],
+    "license": "LGPL-2.1",
+    "authors": [
+        {
+            "name": "Joe Huss",
+            "homepage": "https://my.interserver.net/"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/detain/myadmin-plugin-installer"
+        }
+    ],
+    "require": {
+        "php": ">=5.0.0",
+        "ext-soap": "*",
+	"symfony/event-dispatcher": "*",
+	"detain/myadmin-plugin-installer": "dev-master",
+	"detain/hyperv-vps": "*"
+    },
+    "autoload": {
+        "psr-4": {"Detain\\MyAdminHyperv\\": "src/"}
+    }
+}
