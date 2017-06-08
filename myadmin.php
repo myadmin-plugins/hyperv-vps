@@ -15,10 +15,10 @@ return [
 	'version' => '1.0.0',
 	'type' => 'licenses',
 	'hooks' => [
-		'function.requirements' => ['Detain\MyAdminHyperv\Plugin', 'Requirements'],
+		/*'function.requirements' => ['Detain\MyAdminHyperv\Plugin', 'Requirements'],
 		'licenses.settings' => ['Detain\MyAdminHyperv\Plugin', 'Settings'],
 		'licenses.activate' => ['Detain\MyAdminHyperv\Plugin', 'Activate'],
 		'licenses.change_ip' => ['Detain\MyAdminHyperv\Plugin', 'ChangeIp'],
-		'ui.menu' => ['Detain\MyAdminHyperv\Plugin', 'Menu']
+		'ui.menu' => ['Detain\MyAdminHyperv\Plugin', 'Menu'] */
 	],
 ];
