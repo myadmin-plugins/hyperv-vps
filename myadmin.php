@@ -15,8 +15,8 @@ return [
 	'version' => '1.0.0',
 	'type' => 'service',
 	'hooks' => [
-		/*'function.requirements' => ['Detain\MyAdminHyperv\Plugin', 'Requirements'],
 		'vps.settings' => ['Detain\MyAdminHyperv\Plugin', 'Settings'],
+		/*'function.requirements' => ['Detain\MyAdminHyperv\Plugin', 'Requirements'],
 		'vps.activate' => ['Detain\MyAdminHyperv\Plugin', 'Activate'],
 		'vps.change_ip' => ['Detain\MyAdminHyperv\Plugin', 'ChangeIp'],
 		'ui.menu' => ['Detain\MyAdminHyperv\Plugin', 'Menu'] */
