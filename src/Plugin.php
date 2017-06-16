@@ -19,7 +19,7 @@ class Plugin {
 
 	public static function Hooks() {
 		return [
-			'vps.settings' => ['Detain\MyAdminHyperv\Plugin', 'Settings'],
+			'vps.settings' => [__CLASS__, 'Settings'],
 		];
 	}
 
