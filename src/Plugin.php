@@ -19,7 +19,7 @@ class Plugin {
 
 	public static function getHooks() {
 		return [
-			'vps.settings' => [__CLASS__, 'getSettings'],
+			self::$module.'.settings' => [__CLASS__, 'getSettings'],
 		];
 	}
 
