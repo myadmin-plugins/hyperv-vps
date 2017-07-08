@@ -7,9 +7,9 @@ use Symfony\Component\EventDispatcher\GenericEvent;
 
 class Plugin {
 
-	public static $name = 'Hyperv Vps';
-	public static $description = 'Allows selling of Hyperv Server and VPS License Types.  More info at https://www.netenberg.com/hyperv.php';
-	public static $help = 'It provides more than one million end users the ability to quickly install dozens of the leading open source content management systems into their web space.  	Must have a pre-existing cPanel license with cPanelDirect to purchase a hyperv license. Allow 10 minutes for activation.';
+	public static $name = 'HyperV VPS';
+	public static $description = 'Allows selling of HyperV VPS Types.  Microsoft Hyper-V, codenamed Viridian[1] and formerly known as Windows Server Virtualization, is a native hypervisor; it can create virtual machines on x86-64 systems running Windows.[2] Starting with Windows 8, Hyper-V superseded Windows Virtual PC as the hardware virtualization component of the client editions of Windows NT. A server computer running Hyper-V can be configured to expose individual virtual machines to one or more networks.  More info at https://www.microsoft.com/en-us/cloud-platform/server-virtualization';
+	public static $help = '';
 	public static $module = 'vps';
 	public static $type = 'service';
 
@@ -20,12 +20,13 @@ class Plugin {
 	public static function getHooks() {
 		return [
 			self::$module.'.settings' => [__CLASS__, 'getSettings'],
+			self::$module.'.deactivate' => [__CLASS__, 'getDeactivate'],
 		];
 	}
 
 	public static function getActivate(GenericEvent $event) {
 		$serviceClass = $event->getSubject();
-		if ($event['category'] == SERVICE_TYPES_FANTASTICO) {
+		if ($event['category'] == SERVICE_TYPES_HYPERV) {
 			myadmin_log(self::$module, 'info', 'Hyperv Activation', __LINE__, __FILE__);
 			function_requirements('activate_hyperv');
 			activate_hyperv($serviceClass->getIp(), $event['field1']);
@@ -33,8 +34,16 @@ class Plugin {
 		}
 	}
 
+	public static function getDeactivate(GenericEvent $event) {
+		if ($event['category'] == SERVICE_TYPES_HYPERV) {
+			myadmin_log(self::$module, 'info', self::$name.' Deactivation', __LINE__, __FILE__);
+			$serviceClass = $event->getSubject();
+			$GLOBALS['tf']->history->add(self::$module.'queue', $serviceClass->getId(), 'delete', '', $serviceClass->getCustid());
+		}
+	}
+
 	public static function getChangeIp(GenericEvent $event) {
-		if ($event['category'] == SERVICE_TYPES_FANTASTICO) {
+		if ($event['category'] == SERVICE_TYPES_HYPERV) {
 			$serviceClass = $event->getSubject();
 			$settings = get_module_settings(self::$module);
 			$hyperv = new Hyperv(FANTASTICO_USERNAME, FANTASTICO_PASSWORD);
