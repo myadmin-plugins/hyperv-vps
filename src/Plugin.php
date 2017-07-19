@@ -27,14 +27,14 @@ class Plugin {
 
 	public static function getActivate(GenericEvent $event) {
 		$serviceClass = $event->getSubject();
-		if ($event['type'] == SERVICE_TYPES_HYPERV) {
+		if ($event['type'] == get_service_define('HYPERV')) {
 			myadmin_log(self::$module, 'info', 'Hyperv Activation', __LINE__, __FILE__);
 			$event->stopPropagation();
 		}
 	}
 
 	public static function getDeactivate(GenericEvent $event) {
-		if ($event['type'] == SERVICE_TYPES_HYPERV) {
+		if ($event['type'] == get_service_define('HYPERV')) {
 			myadmin_log(self::$module, 'info', self::$name.' Deactivation', __LINE__, __FILE__);
 			$serviceClass = $event->getSubject();
 			$GLOBALS['tf']->history->add(self::$module.'queue', $serviceClass->getId(), 'delete', '', $serviceClass->getCustid());
@@ -42,7 +42,7 @@ class Plugin {
 	}
 
 	public static function getChangeIp(GenericEvent $event) {
-		if ($event['type'] == SERVICE_TYPES_HYPERV) {
+		if ($event['type'] == get_service_define('HYPERV')) {
 			$serviceClass = $event->getSubject();
 			$settings = get_module_settings(self::$module);
 			$hyperv = new Hyperv(FANTASTICO_USERNAME, FANTASTICO_PASSWORD);
