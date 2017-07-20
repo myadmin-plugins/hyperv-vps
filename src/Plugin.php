@@ -31,7 +31,7 @@ class Plugin {
 		return [
 			self::$module.'.settings' => [__CLASS__, 'getSettings'],
 			//self::$module.'.activate' => [__CLASS__, 'getActivate'],
-			self::$module.'.deactivate' => [__CLASS__, 'getDeactivate'],
+			self::$module.'.deactivate' => [__CLASS__, 'getDeactivate']
 		];
 	}
 
