@@ -102,12 +102,12 @@ class Plugin {
 		$loader->add_requirement('crud_reusable_hyperv', '/../vendor/detain/crud/src/crud/crud_reusable_hyperv.php');
 		$loader->add_requirement('get_hyperv_licenses', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv.inc.php');
 		$loader->add_requirement('get_hyperv_list', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv.inc.php');
-		$loader->add_requirement('hyperv_licenses_list', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv_licenses_list.php');
-		$loader->add_requirement('hyperv_list', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv_list.php');
+		$loader->add_page_requirement('hyperv_licenses_list', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv_licenses_list.php');
+		$loader->add_page_requirement('hyperv_list', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv_list.php');
 		$loader->add_requirement('get_available_hyperv', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv.inc.php');
 		$loader->add_requirement('activate_hyperv', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv.inc.php');
 		$loader->add_requirement('get_reusable_hyperv', '/../vendor/detain/myadmin-hyperv-vps/src/hyperv.inc.php');
-		$loader->add_requirement('reusable_hyperv', '/../vendor/detain/myadmin-hyperv-vps/src/reusable_hyperv.php');
+		$loader->add_page_requirement('reusable_hyperv', '/../vendor/detain/myadmin-hyperv-vps/src/reusable_hyperv.php');
 		$loader->add_requirement('class.Hyperv', '/../vendor/detain/hyperv-vps/src/Hyperv.php');
 		$loader->add_requirement('vps_add_hyperv', '/vps/addons/vps_add_hyperv.php');
 	}
