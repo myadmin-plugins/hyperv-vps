@@ -89,7 +89,7 @@ class Plugin {
 		if ($GLOBALS['tf']->ima == 'admin') {
 			$menu->add_link(self::$module, 'choice=none.reusable_hyperv', 'images/icons/database_warning_48.png', 'ReUsable Hyperv Licenses');
 			$menu->add_link(self::$module, 'choice=none.hyperv_list', 'images/icons/database_warning_48.png', 'Hyperv Licenses Breakdown');
-			$menu->add_link(self::$module.'api', 'choice=none.hyperv_licenses_list', 'whm/createacct.gif', 'List all Hyperv Licenses');
+			$menu->add_link(self::$module.'api', 'choice=none.hyperv_licenses_list', '/images/whm/createacct.gif', 'List all Hyperv Licenses');
 		}
 	}
 
