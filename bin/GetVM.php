@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-include_once __DIR__.'/../../../include/functions.inc.php';
+include_once __DIR__.'/../../../../include/functions.inc.php';
 ini_set('soap.wsdl_cache_enabled', '0');
 ini_set('default_socket_timeout', 1000);
 ini_set('max_input_time', '0');
