@@ -44,7 +44,6 @@ class Plugin {
 			self::$module.'.queue_start' => [__CLASS__, 'getQueueStart'],
 			self::$module.'.queue_stop' => [__CLASS__, 'getQueueStop'],
 			self::$module.'.queue_restart' => [__CLASS__, 'getQueueRestart'],
-			self::$module.'.queue_setup_vnc' => [__CLASS__, 'getQueueSetupVnc'],
 			self::$module.'.queue_reset_password' => [__CLASS__, 'getQueueResetPassword'],
 		];
 	}
@@ -353,26 +352,6 @@ class Plugin {
 				'param1' => $event['param1']
 			]);
 			echo $smarty->fetch(__DIR__.'/../templates/restart.sh.tpl');
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueSetupVnc(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Setup Vnc', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/setup_vnc.sh.tpl');
 			$event->stopPropagation();
 		}
 	}
