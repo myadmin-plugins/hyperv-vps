@@ -11,21 +11,7 @@ if ($_SERVER['argc'] < 2)
 	die("Call like {$_SERVER['argv'][0]} <id>\nwhere <id> is the VPS Master / Host Server ID\nuse 423 for Hyperv-dev and 440 for Hyperv1\n");
 $master = get_service_master($_SERVER['argv'][1], 'vps', true);
 try {
-	$params = [
-		'encoding' => 'UTF-8',
-		'verifypeer' => FALSE,
-		'verifyhost' => FALSE,
-		'soap_version' => SOAP_1_2,
-		'trace' => 1,
-		'exceptions' => 1,
-		'connection_timeout' => 180,
-		'stream_context' => stream_context_create([
-			'ssl' => [
-				'ciphers' => 'RC4-SHA',
-				'verify_peer' => FALSE,
-				'verify_peer_name' => FALSE
-		]])
-	];
+	$params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();
 	$soap = new SoapClient("https://{$master['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", $params);
 	//$response = $soap->CleanUpResources(array('hyperVAdmin' => 'Administrator', 'adminPassword' => $master['vps_root']));
 	$response = $soap->CleanUpResources();

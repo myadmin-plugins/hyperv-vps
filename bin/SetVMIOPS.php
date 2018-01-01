@@ -25,21 +25,7 @@ try {
 		'adminPassword' => $master['vps_root']
 	];
 	echo 'Calling SetVMIOPS with a parameters ' . print_r($parameters, true) . "\n";
-	$params = [
-		'encoding' => 'UTF-8',
-		'verifypeer' => FALSE,
-		'verifyhost' => FALSE,
-		'soap_version' => SOAP_1_2,
-		'trace' => 1,
-		'exceptions' => 1,
-		'connection_timeout' => 180,
-		'stream_context' => stream_context_create([
-			'ssl' => [
-				'ciphers' => 'RC4-SHA',
-				'verify_peer' => FALSE,
-				'verify_peer_name' => FALSE
-		]])
-	];
+	$params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();
 	$soap = new SoapClient("https://{$master['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", $params);
 	$response = $soap->SetVMIOPS($parameters);
 	echo 'SetVMIOPS returned ' . print_r($response->SetVMIOPSResult, true) . "\n";
