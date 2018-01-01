@@ -16,5 +16,5 @@ try {
 	$response = $soap->UpdateVM(['vmId' => $_SERVER['argv'][2], 'cpuCores' => $_SERVER['argv'][3], 'ramMB' => $_SERVER['argv'][4], 'bootFromCD' => false, 'numLockEnabled' => true, 'hyperVAdmin' => 'Administrator', 'adminPassword' => $master['vps_root']]);
 	print_r($response);
 } catch (Exception $e) {
-	echo 'Caught exception: '.$e->getMessage()."\n";
+	echo 'Caught exception: '.$e->getMessage().PHP_EOL;
 }

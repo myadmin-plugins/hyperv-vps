@@ -16,5 +16,5 @@ try {
 	$response = $soap->Pause(['vmId' => $_SERVER['argv'][2], 'hyperVAdmin' => 'Administrator', 'adminPassword' => $master['vps_root']]);
 	print_r($response->PauseResult);
 } catch (Exception $e) {
-	echo 'Caught exception: '.$e->getMessage()."\n";
+	echo 'Caught exception: '.$e->getMessage().PHP_EOL;
 }

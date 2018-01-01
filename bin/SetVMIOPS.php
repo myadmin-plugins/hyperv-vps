@@ -24,11 +24,11 @@ try {
 		'adminUsername' => 'Administrator',
 		'adminPassword' => $master['vps_root']
 	];
-	echo 'Calling SetVMIOPS with a parameters ' . print_r($parameters, true) . "\n";
+	echo 'Calling SetVMIOPS with a parameters ' . print_r($parameters, true).PHP_EOL;
 	$params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();
 	$soap = new SoapClient("https://{$master['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", $params);
 	$response = $soap->SetVMIOPS($parameters);
-	echo 'SetVMIOPS returned ' . print_r($response->SetVMIOPSResult, true) . "\n";
+	echo 'SetVMIOPS returned ' . print_r($response->SetVMIOPSResult, true).PHP_EOL;
 } catch (Exception $e) {
-	echo 'Caught exception: '.$e->getMessage()."\n";
+	echo 'Caught exception: '.$e->getMessage().PHP_EOL;
 }

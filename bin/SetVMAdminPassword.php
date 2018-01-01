@@ -21,9 +21,9 @@ try {
 		//'hyperVAdmin'			 => 'Administrator',
 		//'adminPassword'		 => $master['vps_root']
 	];
-	echo 'Parameters: ' . str_replace("\n", '', print_r($input, true)) . "\n";
+	echo 'Parameters: ' . str_replace("\n", '', print_r($input, true)).PHP_EOL;
 	$response = $soap->SetVMAdminPassword($input);
 	print_r($response);
 } catch (Exception $e) {
-	echo 'Caught exception: '.str_replace("\n", '', $e->getMessage())."\n";
+	echo 'Caught exception: '.str_replace("\n", '', $e->getMessage()).PHP_EOL;
 }

@@ -25,7 +25,7 @@ try {
 	);
 	print_r($response);
 } catch (Exception $e) {
-	echo 'Caught exception: '.$e->getMessage()."\n";
+	echo 'Caught exception: '.$e->getMessage().PHP_EOL;
 }
 /* Returned:
 stdClass::__set_state(array(
