@@ -376,4 +376,26 @@ class Plugin {
 		}
 	}
 
+	/**
+	 * gets the preferred connection parameter settings for the SoapClient
+	 *
+	 * @return array an array of the connection parameters for Soapclient
+	 */
+	public static function getSoapClientParams() {
+		return [
+			'encoding' => 'UTF-8',
+			'verifypeer' => FALSE,
+			'verifyhost' => FALSE,
+			'soap_version' => SOAP_1_2,
+			'trace' => 1,
+			'exceptions' => 1,
+			'connection_timeout' => 600,
+			'stream_context' => stream_context_create([
+				'ssl' => [
+					'ciphers' => 'RC4-SHA',
+					'verify_peer' => FALSE,
+					'verify_peer_name' => FALSE
+			]])
+		];
+	}
 }
