@@ -147,7 +147,7 @@ class Plugin {
 			];
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->TurnON($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -173,7 +173,7 @@ class Plugin {
 			];
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->TurnOff($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -182,7 +182,7 @@ class Plugin {
 			}
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->DeleteVM($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -209,7 +209,7 @@ class Plugin {
 			];
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->TurnOff($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -235,7 +235,7 @@ class Plugin {
 				'adminPassword' => $server_info['vps_root']
 			];
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->TurnOff($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -248,7 +248,7 @@ class Plugin {
 				$status = $response->TurnOffResult->Success;
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response Status: '.$status, __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->DeleteVM($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -327,7 +327,7 @@ class Plugin {
 			];
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->TurnON($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -353,14 +353,14 @@ class Plugin {
 			];
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->TurnOff($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
 				echo $msg.PHP_EOL;
 				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
 			}
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.$response->TurnOffResult->Status, __LINE__, __FILE__);
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.$response->TurnOffResult->Status, __LINE__, __FILE__);
 			$event->stopPropagation();
 		}
 	}
@@ -380,7 +380,7 @@ class Plugin {
 			];
 			myadmin_log(self::$module, 'info', $server_info['vps_name'].' Reboot '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 			try {
-				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
 				$response = $soap->Reboot($parameters);
 			} catch (Exception $e) {
 				$msg = $server_info['vps_name'].' Reboot '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
@@ -401,6 +401,16 @@ class Plugin {
 			$server_info = $vps['server_info'];
 			$event->stopPropagation();
 		}
+	}
+
+	/**
+	 * gets the connection URL for the SoapClient
+	 *
+	 * @param string $address the ip address or domain name of the remote APi server
+	 * @return array an array of the connection parameters for Soapclient
+	 */
+	public static function getSoapClientUrl($address) {
+		return 'https://'.$address.'/HyperVService/HyperVService.asmx?WSDL';
 	}
 
 	/**
