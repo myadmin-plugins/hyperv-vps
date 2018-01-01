@@ -36,7 +36,6 @@ class Plugin {
 			self::$module.'.queue_destroy' => [__CLASS__, 'getQueueDestroy'],
 			self::$module.'.queue_delete' => [__CLASS__, 'getQueueDelete'],
 			self::$module.'.queue_reinstall_os' => [__CLASS__, 'getQueueReinstallOs'],
-			self::$module.'.queue_update_hdsize' => [__CLASS__, 'getQueueUpdateHdsize'],
 			self::$module.'.queue_start' => [__CLASS__, 'getQueueStart'],
 			self::$module.'.queue_stop' => [__CLASS__, 'getQueueStop'],
 			self::$module.'.queue_restart' => [__CLASS__, 'getQueueRestart'],
@@ -224,9 +223,9 @@ class Plugin {
 	/**
 	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
 	 */
-	public static function getQueueReinstallOsupdateHdsize(GenericEvent $event) {
+	public static function getQueueReinstallOs(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Reinstall Osupdate Hdsize', __LINE__, __FILE__);
+			myadmin_log(self::$module, 'info', self::$name.' Queue Reinstall Os', __LINE__, __FILE__);
 			$vps = $event->getSubject();
 			$server_info = $vps['server_info'];
 			$parameters = [
