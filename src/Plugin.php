@@ -37,10 +37,6 @@ class Plugin {
 			self::$module.'.queue_delete' => [__CLASS__, 'getQueueDelete'],
 			self::$module.'.queue_reinstall_os' => [__CLASS__, 'getQueueReinstallOs'],
 			self::$module.'.queue_update_hdsize' => [__CLASS__, 'getQueueUpdateHdsize'],
-			self::$module.'.queue_enable_cd' => [__CLASS__, 'getQueueEnableCd'],
-			self::$module.'.queue_disable_cd' => [__CLASS__, 'getQueueDisableCd'],
-			self::$module.'.queue_insert_cd' => [__CLASS__, 'getQueueInsertCd'],
-			self::$module.'.queue_eject_cd' => [__CLASS__, 'getQueueEjectCd'],
 			self::$module.'.queue_start' => [__CLASS__, 'getQueueStart'],
 			self::$module.'.queue_stop' => [__CLASS__, 'getQueueStop'],
 			self::$module.'.queue_restart' => [__CLASS__, 'getQueueRestart'],
@@ -142,16 +138,22 @@ class Plugin {
 	public static function getQueueEnable(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Enable', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/enable.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
+			$parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $server_info['vps_root']
+			];
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->TurnON($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
 			$event->stopPropagation();
 		}
 	}
@@ -162,16 +164,32 @@ class Plugin {
 	public static function getQueueDestroy(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Destroy', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/destroy.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
+			$parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $server_info['vps_root']
+			];
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->TurnOff($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->DeleteVM($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.json_encode($response->DeleteVMResult), __LINE__, __FILE__);
 			$event->stopPropagation();
 		}
 	}
@@ -182,16 +200,23 @@ class Plugin {
 	public static function getQueueDelete(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Delete', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/delete.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
+			$parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $server_info['vps_root']
+			];
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->TurnOff($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.$response->TurnOffResult->Status, __LINE__, __FILE__);
 			$event->stopPropagation();
 		}
 	}
@@ -202,16 +227,39 @@ class Plugin {
 	public static function getQueueReinstallOsupdateHdsize(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Reinstall Osupdate Hdsize', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/reinstall_osupdate_hdsize.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
+			$parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $server_info['vps_root']
+			];
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->TurnOff($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
+			if (isset($response->TurnOffResult->Status))
+				$status = $response->TurnOffResult->Status;
+			else
+				$status = $response->TurnOffResult->Success;
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response Status: '.$status, __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->DeleteVM($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
+			if (isset($response->DeleteVMResult->Status))
+				$status = $response->DeleteVMResult->Status;
+			else
+				$status = $response->DeleteVMResult->Success;
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response Status: '.$status, __LINE__, __FILE__);
 			$event->stopPropagation();
 		}
 	}
@@ -222,16 +270,8 @@ class Plugin {
 	public static function getQueueEnableCd(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Enable Cd', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/enable_cd.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
 			$event->stopPropagation();
 		}
 	}
@@ -242,16 +282,8 @@ class Plugin {
 	public static function getQueueDisableCd(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Disable Cd', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/disable_cd.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
 			$event->stopPropagation();
 		}
 	}
@@ -262,16 +294,8 @@ class Plugin {
 	public static function getQueueInsertCd(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Insert Cd', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/insert_cd.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
 			$event->stopPropagation();
 		}
 	}
@@ -282,16 +306,8 @@ class Plugin {
 	public static function getQueueEjectCd(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Eject Cd', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/eject_cd.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
 			$event->stopPropagation();
 		}
 	}
@@ -302,16 +318,22 @@ class Plugin {
 	public static function getQueueStart(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Start', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/start.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
+			$parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $server_info['vps_root']
+			];
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->TurnON($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
 			$event->stopPropagation();
 		}
 	}
@@ -322,16 +344,23 @@ class Plugin {
 	public static function getQueueStop(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Stop', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/stop.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
+			$parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $server_info['vps_root']
+			];
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->TurnOff($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.$response->TurnOffResult->Status, __LINE__, __FILE__);
 			$event->stopPropagation();
 		}
 	}
@@ -342,16 +371,22 @@ class Plugin {
 	public static function getQueueRestart(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Restart', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/restart.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
+			$parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $server_info['vps_root']
+			];
+			myadmin_log(self::$module, 'info', $server_info['vps_name'].' Reboot '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			try {
+				$soap = new SoapClient("https://{$server_info['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", \Detain\MyAdminHyperv\Plugin::getSoapClientParams());
+				$response = $soap->Reboot($parameters);
+			} catch (Exception $e) {
+				$msg = $server_info['vps_name'].' Reboot '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+				echo $msg.PHP_EOL;
+				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			}
 			$event->stopPropagation();
 		}
 	}
@@ -362,16 +397,8 @@ class Plugin {
 	public static function getQueueResetPassword(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			myadmin_log(self::$module, 'info', self::$name.' Queue Reset Password', __LINE__, __FILE__);
-			$serviceClass = $event->getSubject();
-			$smarty = new \TFSmarty();
-			$smarty->assign([
-				'vps_id' => $serviceClass->getId(),
-				'vps_vzid' => is_numeric($serviceClass->getVzid()) ? (in_array($event['type'], [get_service_define('KVM_WINDOWS'), get_service_define('CLOUD_KVM_WINDOWS')]) ? 'windows'.$serviceClass->getVzid() : 'linux'.$serviceClass->getVzid()) : $serviceClass->getVzid(),
-				'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid()),
-				'domain' => DOMAIN,
-				'param1' => $event['param1']
-			]);
-			echo $smarty->fetch(__DIR__.'/../templates/reset_password.sh.tpl');
+			$vps = $event->getSubject();
+			$server_info = $vps['server_info'];
 			$event->stopPropagation();
 		}
 	}
