@@ -127,13 +127,13 @@ class Plugin {
 
 	public static function getQeueueCalls() {
 		return [
-			'enable' => ['TurnON'],
-			'destroy' => ['TurnOff', 'DeleteVM'],
-			'delete' => ['TurnOff'],
-			'reinstall_os' => ['TurnOff', 'DeleteVM'],
-			'start' => ['TurnON'],
-			'stop' => ['TurnOff'],
 			'restart' => ['Reboot'],
+			'enable' => ['TurnON'],
+			'start' => ['TurnON'],
+			'delete' => ['TurnOff'],
+			'stop' => ['TurnOff'],
+			'destroy' => ['TurnOff', 'DeleteVM'],
+			'reinstall_os' => ['TurnOff', 'DeleteVM'],
 		];
 	}
 
