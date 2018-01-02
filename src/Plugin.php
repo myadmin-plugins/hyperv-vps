@@ -32,14 +32,7 @@ class Plugin {
 			self::$module.'.settings' => [__CLASS__, 'getSettings'],
 			//self::$module.'.activate' => [__CLASS__, 'getActivate'],
 			self::$module.'.deactivate' => [__CLASS__, 'getDeactivate'],
-			self::$module.'.queue_enable' => [__CLASS__, 'getQueueEnable'],
-			self::$module.'.queue_destroy' => [__CLASS__, 'getQueueDestroy'],
-			self::$module.'.queue_delete' => [__CLASS__, 'getQueueDelete'],
-			self::$module.'.queue_reinstall_os' => [__CLASS__, 'getQueueReinstallOs'],
-			self::$module.'.queue_start' => [__CLASS__, 'getQueueStart'],
-			self::$module.'.queue_stop' => [__CLASS__, 'getQueueStop'],
-			self::$module.'.queue_restart' => [__CLASS__, 'getQueueRestart'],
-			self::$module.'.queue_reset_password' => [__CLASS__, 'getQueueResetPassword'],
+			self::$module.'.queue' => [__CLASS__, 'getQueue'],
 		];
 	}
 
@@ -62,30 +55,6 @@ class Plugin {
 			myadmin_log(self::$module, 'info', self::$name.' Deactivation', __LINE__, __FILE__);
 			$serviceClass = $event->getSubject();
 			$GLOBALS['tf']->history->add(self::$module.'queue', $serviceClass->getId(), 'delete', '', $serviceClass->getCustid());
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getChangeIp(GenericEvent $event) {
-		if ($event['type'] == get_service_define('HYPERV')) {
-			$serviceClass = $event->getSubject();
-			$settings = get_module_settings(self::$module);
-			$hyperv = new Hyperv(FANTASTICO_USERNAME, FANTASTICO_PASSWORD);
-			myadmin_log(self::$module, 'info', 'IP Change - (OLD:' .$serviceClass->getIp().") (NEW:{$event['newip']})", __LINE__, __FILE__);
-			$result = $hyperv->editIp($serviceClass->getIp(), $event['newip']);
-			if (isset($result['faultcode'])) {
-				myadmin_log(self::$module, 'error', 'Hyperv editIp('.$serviceClass->getIp().', '.$event['newip'].') returned Fault '.$result['faultcode'].': '.$result['fault'], __LINE__, __FILE__);
-				$event['status'] = 'error';
-				$event['status_text'] = 'Error Code '.$result['faultcode'].': '.$result['fault'];
-			} else {
-				$GLOBALS['tf']->history->add($settings['TABLE'], 'change_ip', $event['newip'], $serviceClass->getIp());
-				$serviceClass->set_ip($event['newip'])->save();
-				$event['status'] = 'ok';
-				$event['status_text'] = 'The IP Address has been changed.';
-			}
-			$event->stopPropagation();
 		}
 	}
 
@@ -134,272 +103,46 @@ class Plugin {
 	/**
 	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
 	 */
-	public static function getQueueEnable(GenericEvent $event) {
+	public static function getQueue(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Enable', __LINE__, __FILE__);
+			myadmin_log(self::$module, 'info', self::$name.' Queue '.ucwords(str_replace('_', ' ', $vps['action'])), __LINE__, __FILE__);
+			$queue_calls = self::getQueueCalls();
 			$vps = $event->getSubject();
+			$calls = $queue_calls[$vps['action']];
 			$server_info = $vps['server_info'];
-			$parameters = [
-				'vmId' => $vps['vps_vzid'],
-				'hyperVAdmin' => 'Administrator',
-				'adminPassword' => $server_info['vps_root']
-			];
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->TurnON($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			foreach ($calls as $call) {
+				myadmin_log(self::$module, 'info', $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+				try {
+					$soap = new SoapClient(self::getSoapClientUrl($vps['server_info']['vps_ip']), self::getSoapClientParams());
+					$response = $soap->$call(self::getDefaultCallParams($vps));
+				} catch (Exception $e) {
+					$msg = $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+					echo $msg.PHP_EOL;
+					myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+				}
 			}
 			$event->stopPropagation();
 		}
 	}
 
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueDestroy(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Destroy', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$parameters = [
-				'vmId' => $vps['vps_vzid'],
-				'hyperVAdmin' => 'Administrator',
-				'adminPassword' => $server_info['vps_root']
-			];
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->TurnOff($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->DeleteVM($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.json_encode($response->DeleteVMResult), __LINE__, __FILE__);
-			$event->stopPropagation();
-		}
+	public static function getQeueueCalls() {
+		return [
+			'enable' => ['TurnON'],
+			'destroy' => ['TurnOff', 'DeleteVM'],
+			'delete' => ['TurnOff'],
+			'reinstall_os' => ['TurnOff', 'DeleteVM'],
+			'start' => ['TurnON'],
+			'stop' => ['TurnOff'],
+			'restart' => ['Reboot'],
+		];
 	}
 
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueDelete(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Delete', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$parameters = [
-				'vmId' => $vps['vps_vzid'],
-				'hyperVAdmin' => 'Administrator',
-				'adminPassword' => $server_info['vps_root']
-			];
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->TurnOff($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.$response->TurnOffResult->Status, __LINE__, __FILE__);
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueReinstallOs(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Reinstall Os', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$parameters = [
-				'vmId' => $vps['vps_vzid'],
-				'hyperVAdmin' => 'Administrator',
-				'adminPassword' => $server_info['vps_root']
-			];
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->TurnOff($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			if (isset($response->TurnOffResult->Status))
-				$status = $response->TurnOffResult->Status;
-			else
-				$status = $response->TurnOffResult->Success;
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response Status: '.$status, __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->DeleteVM($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' DeleteVM '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			if (isset($response->DeleteVMResult->Status))
-				$status = $response->DeleteVMResult->Status;
-			else
-				$status = $response->DeleteVMResult->Success;
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response Status: '.$status, __LINE__, __FILE__);
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueEnableCd(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Enable Cd', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueDisableCd(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Disable Cd', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueInsertCd(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Insert Cd', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueEjectCd(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Eject Cd', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueStart(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Start', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$parameters = [
-				'vmId' => $vps['vps_vzid'],
-				'hyperVAdmin' => 'Administrator',
-				'adminPassword' => $server_info['vps_root']
-			];
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->TurnON($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' TurnON '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueStop(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Stop', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$parameters = [
-				'vmId' => $vps['vps_vzid'],
-				'hyperVAdmin' => 'Administrator',
-				'adminPassword' => $server_info['vps_root']
-			];
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->TurnOff($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' TurnOff '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Response: '.$response->TurnOffResult->Status, __LINE__, __FILE__);
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueRestart(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Restart', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$parameters = [
-				'vmId' => $vps['vps_vzid'],
-				'hyperVAdmin' => 'Administrator',
-				'adminPassword' => $server_info['vps_root']
-			];
-			myadmin_log(self::$module, 'info', $server_info['vps_name'].' Reboot '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-			try {
-				$soap = new SoapClient(self::getSoapClientUrl($server_info['vps_ip']), self::getSoapClientParams());
-				$response = $soap->Reboot($parameters);
-			} catch (Exception $e) {
-				$msg = $server_info['vps_name'].' Reboot '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-				echo $msg.PHP_EOL;
-				myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
-			}
-			$event->stopPropagation();
-		}
-	}
-
-	/**
-	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-	 */
-	public static function getQueueResetPassword(GenericEvent $event) {
-		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue Reset Password', __LINE__, __FILE__);
-			$vps = $event->getSubject();
-			$server_info = $vps['server_info'];
-			$event->stopPropagation();
-		}
+	public static function getDefaultCallParams($vps) {
+		return [
+			'vmId' => $vps['vps_vzid'],
+			'hyperVAdmin' => 'Administrator',
+			'adminPassword' => $vps['server_info']['vps_root']
+		];
 	}
 
 	/**
