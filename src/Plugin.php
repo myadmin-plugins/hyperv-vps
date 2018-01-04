@@ -74,27 +74,32 @@ class Plugin {
 	 */
 	public static function getQueue(GenericEvent $event) {
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
-			myadmin_log(self::$module, 'info', self::$name.' Queue '.ucwords(str_replace('_', ' ', $vps['action'])), __LINE__, __FILE__);
-			$queue_calls = self::getQueueCalls();
 			$vps = $event->getSubject();
-			$calls = $queue_calls[$vps['action']];
-			$server_info = $vps['server_info'];
-			foreach ($calls as $call) {
-				myadmin_log(self::$module, 'info', $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
-				try {
-					$soap = new SoapClient(self::getSoapClientUrl($vps['server_info']['vps_ip']), self::getSoapClientParams());
-					$response = $soap->$call(self::getDefaultCallParams($vps));
-				} catch (Exception $e) {
-					$msg = $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
-					echo $msg.PHP_EOL;
-					myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+			myadmin_log(self::$module, 'info', self::$name.' Queue '.ucwords(str_replace('_', ' ', $vps['action'])).' for VPS '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+			$queue_calls = self::getQueueCalls();
+			if (!isset($queue_calls[$vps['action']])) {
+				myadmin_log(self::$module, 'error', 'Call '.$vps['action'].' for VPS '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Does not Exist for '.self::$name, __LINE__, __FILE__);
+			} else {
+				$calls = $queue_calls[$vps['action']];
+				$server_info = $vps['server_info'];
+				foreach ($calls as $call) {
+					myadmin_log(self::$module, 'info', $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+					try {
+						$soap = new \SoapClient(self::getSoapClientUrl($vps['server_info']['vps_ip']), self::getSoapClientParams());
+						$response = $soap->$call(self::getSoapCallParams($call, $vps));
+					} catch (Exception $e) {
+						$msg = $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+						echo $msg.PHP_EOL;
+						myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+						//$event['success'] = FALSE;
+					}
 				}
 			}
 			$event->stopPropagation();
 		}
 	}
 
-	public static function getQeueueCalls() {
+	public static function getQueueCalls() {
 		return [
 			'restart' => ['Reboot'],
 			'enable' => ['TurnON'],
@@ -106,7 +111,7 @@ class Plugin {
 		];
 	}
 
-	public static function getDefaultCallParams($vps) {
+	public static function getSoapCallParams($call, $vps) {
 		return [
 			'vmId' => $vps['vps_vzid'],
 			'hyperVAdmin' => 'Administrator',
