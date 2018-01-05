@@ -87,7 +87,12 @@ class Plugin {
 					try {
 						$soap = new \SoapClient(self::getSoapClientUrl($vps['server_info']['vps_ip']), self::getSoapClientParams());
 						$response = $soap->$call(self::getSoapCallParams($call, $vps));
-					} catch (Exception $e) {
+					} catch (\SoapFault $e) {
+						$msg = $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
+						echo $msg.PHP_EOL;
+						myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+						//$event['success'] = FALSE;
+					} catch (\Exception $e) {
 						$msg = $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
 						echo $msg.PHP_EOL;
 						myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
