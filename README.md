@@ -24,5 +24,5 @@ composer require detain/myadmin-hyperv-vps
 
 ## License
 
-The Hyperv Vps Class class is licensed under the LGPL-v2 license.
+The Hyperv Vps Class class is licensed under the LGPL-v2.1 license.
 
