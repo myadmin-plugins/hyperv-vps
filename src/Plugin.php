@@ -81,7 +81,6 @@ class Plugin {
 				myadmin_log(self::$module, 'error', 'Call '.$vps['action'].' for VPS '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Does not Exist for '.self::$name, __LINE__, __FILE__);
 			} else {
 				$calls = $queue_calls[$vps['action']];
-				$server_info = $vps['server_info'];
 				foreach ($calls as $call) {
 					myadmin_log(self::$module, 'info', $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
 					try {
@@ -113,15 +112,42 @@ class Plugin {
 			'stop' => ['TurnOff'],
 			'destroy' => ['TurnOff', 'DeleteVM'],
 			'reinstall_os' => ['TurnOff', 'DeleteVM'],
+			'set_slices' => ['TurnOff', 'ResizeVMHardDrive', 'UpdateVM', 'SetVMIOPS', 'TurnON']
 		];
 	}
 
 	public static function getSoapCallParams($call, $vps) {
-		return [
-			'vmId' => $vps['vps_vzid'],
-			'hyperVAdmin' => 'Administrator',
-			'adminPassword' => $vps['server_info']['vps_root']
-		];
+		if ($call == 'ResizeVMHardDrive')
+			return [
+				'vmId' => $vps['vps_vzid'],
+				'updatedDriveSizeInGigabytes' => 1 * ((VPS_SLICE_HD * $vps['vps_slices']) + $vps['settings']['additional_hd']),
+				'hyperVAdminUsername' => 'Administrator',
+				'hyperVAdminPassword' => $vps['server_info']['vps_root'],
+			];
+		elseif ($call == 'UpdateVM')
+			return [
+				'vmId' => $vps['vps_vzid'],
+				'cpuCores' => in_array($vps['vps_custid'], [2773, 8, 2304]) ? ceil($vps['vps_slices'] / 2): ceil($vps['vps_slices'] / 4),
+				'ramMB' => 1 * VPS_SLICE_RAM * $vps['vps_slices'],
+				'bootFromCD' => false,
+				'numLockEnabled' => true,
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $vps['server_info']['vps_root']
+			];
+		elseif ($call == 'SetVMIOPS')
+			return [
+				'vmId' => $vps['vps_vzid'],
+				'minimumOps' => 5 +  (5 * $vps['vps_slices']),
+				'maximumOps' => 250 + (50 * $vps['vps_slices']),
+				'adminUsername' => 'Administrator',
+				'adminPassword' => $vps['server_info']['vps_root']
+			];
+		else
+			return [
+				'vmId' => $vps['vps_vzid'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $vps['server_info']['vps_root']
+			];
 	}
 
 	/**
