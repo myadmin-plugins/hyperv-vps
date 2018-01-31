@@ -117,12 +117,23 @@ class Plugin {
 	}
 
 	public static function getSoapCallParams($call, $vps) {
-		if ($call == 'ResizeVMHardDrive')
+		if ($call == 'CleanUpResources')
+			return [];
+		elseif ($call == 'ResizeVMHardDrive')
 			return [
 				'vmId' => $vps['vps_vzid'],
 				'updatedDriveSizeInGigabytes' => 1 * ((VPS_SLICE_HD * $vps['vps_slices']) + $vps['settings']['additional_hd']),
 				'hyperVAdminUsername' => 'Administrator',
 				'hyperVAdminPassword' => $vps['server_info']['vps_root'],
+			];
+		elseif ($call == 'CreateVM')
+			return [
+				'vmName' => $vps['vps_hostname'],
+				'vhdSize' => 1 * ((VPS_SLICE_HD * $vps['vps_slices']) + $vps['settings']['additional_hd']),
+				'ramSize' => 1 * VPS_SLICE_RAM * $vps['vps_slices'],
+				'osToInstall' => $vps['vps_os'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $vps['server_info']['vps_root']
 			];
 		elseif ($call == 'UpdateVM')
 			return [
@@ -140,6 +151,35 @@ class Plugin {
 				'minimumOps' => 5 +  (5 * $vps['vps_slices']),
 				'maximumOps' => 250 + (50 * $vps['vps_slices']),
 				'adminUsername' => 'Administrator',
+				'adminPassword' => $vps['server_info']['vps_root']
+			];
+		elseif ($call == 'SetVMAdminPassword')
+			return [
+				'adminUser' => 'Administrator',
+				'adminPassword' => $vps['server_info']['vps_root'],
+				'vmId' => $vps['vps_vzid'],
+				'username' => 'Administrator',
+				'existingPassword' => VPS_HYPERV_PASSWORD,
+				'newPassword' => vps_get_password($vps['vps_id'])
+			];
+		elseif ($call == 'AddPublicIp') {
+			$db = get_module_db('default');
+			$db->query("select vlans_networks from vlans where vlans_id=(select ips_vlan from ips where ips_ip='{$vps['vps_ip']}')");
+			$db->next_record(MYSQL_ASSOC);
+			function_requirements('ipcalc');
+			$ipinfo = ipcalc(str_replace(':', '', $db->Record['vlans_networks']));
+			$ip_parameters = [
+				'vmId' => $vps['vps_vzid'],
+				'ip' => $vps['vps_ip'],
+				'defaultGateways' => $ipinfo['hostmin'],
+				'subnets' => $ipinfo['netmask'],
+				'dns' => ['8.8.8.8', '8.8.4.4'],
+				'hyperVAdmin' => 'Administrator',
+				'adminPassword' => $vps['server_info']['vps_root']
+			];
+		} elseif (in_array($call, ['GetVMList']))
+			return [
+				'hyperVAdmin' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
 		else
