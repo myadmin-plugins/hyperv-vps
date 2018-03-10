@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 include_once __DIR__.'/../../../../include/functions.inc.php';
 ini_set('soap.wsdl_cache_enabled', '0');
