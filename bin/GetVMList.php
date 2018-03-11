@@ -9,7 +9,7 @@ ini_set('display_errors', '1');
 ini_set('error_reporting', E_ALL);
 if ($_SERVER['argc'] < 2)
 	die("Call like {$_SERVER['argv'][0]} <id>\nwhere <id> is the VPS Master / Host Server ID\nuse 423 for Hyperv-dev and 440 for Hyperv1\n");
-$master = get_service_master($_SERVER['argv'][1], 'vps', true);
+$master = get_service_master($_SERVER['argv'][1], 'vps', TRUE);
 try {
 	$params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();
 	$soap = new SoapClient("https://{$master['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", $params);
