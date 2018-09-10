@@ -10,8 +10,8 @@ use Symfony\Component\EventDispatcher\GenericEvent;
  *
  * @package Detain\MyAdminHyperv
  */
-class Plugin {
-
+class Plugin
+{
 	public static $name = 'HyperV VPS';
 	public static $description = 'Allows selling of HyperV VPS Types.  Microsoft Hyper-V, codenamed Viridian and formerly known as Windows Server Virtualization, is a native hypervisor; it can create virtual machines on x86-64 systems running Windows. Starting with Windows 8, Hyper-V superseded Windows Virtual PC as the hardware virtualization component of the client editions of Windows NT. A server computer running Hyper-V can be configured to expose individual virtual machines to one or more networks.  More info at https://www.microsoft.com/en-us/cloud-platform/server-virtualization';
 	public static $help = '';
@@ -21,13 +21,15 @@ class Plugin {
 	/**
 	 * Plugin constructor.
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 	}
 
 	/**
 	 * @return array
 	 */
-	public static function getHooks() {
+	public static function getHooks()
+	{
 		return [
 			self::$module.'.settings' => [__CLASS__, 'getSettings'],
 			//self::$module.'.activate' => [__CLASS__, 'getActivate'],
@@ -39,7 +41,8 @@ class Plugin {
 	/**
 	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
 	 */
-	public static function getActivate(GenericEvent $event) {
+	public static function getActivate(GenericEvent $event)
+	{
 		$serviceClass = $event->getSubject();
 		if ($event['type'] == get_service_define('HYPERV')) {
 			myadmin_log(self::$module, 'info', 'Hyperv Activation', __LINE__, __FILE__);
@@ -50,7 +53,8 @@ class Plugin {
 	/**
 	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
 	 */
-	public static function getDeactivate(GenericEvent $event) {
+	public static function getDeactivate(GenericEvent $event)
+	{
 		if ($event['type'] == get_service_define('HYPERV')) {
 			myadmin_log(self::$module, 'info', self::$name.' Deactivation', __LINE__, __FILE__);
 			$serviceClass = $event->getSubject();
@@ -61,7 +65,8 @@ class Plugin {
 	/**
 	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
 	 */
-	public static function getSettings(GenericEvent $event) {
+	public static function getSettings(GenericEvent $event)
+	{
 		$settings = $event->getSubject();
 		$settings->add_text_setting(self::$module, 'Credentials', 'vps_hyperv_password', 'HyperV Administrator Password:', 'Administrative password to login to the HyperV server', $settings->get_setting('VPS_HYPERV_PASSWORD'));
 		$settings->add_text_setting(self::$module, 'Slice Costs', 'vps_slice_hyperv_cost', 'HyperV VPS Cost Per Slice:', 'HyperV VPS will cost this much for 1 slice.', $settings->get_setting('VPS_SLICE_HYPERV_COST'));
@@ -72,7 +77,8 @@ class Plugin {
 	/**
 	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
 	 */
-	public static function getQueue(GenericEvent $event) {
+	public static function getQueue(GenericEvent $event)
+	{
 		if (in_array($event['type'], [get_service_define('HYPERV')])) {
 			$vps = $event->getSubject();
 			myadmin_log(self::$module, 'info', self::$name.' Queue '.ucwords(str_replace('_', ' ', $vps['action'])).' for VPS '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
@@ -103,7 +109,8 @@ class Plugin {
 		}
 	}
 
-	public static function getQueueCalls() {
+	public static function getQueueCalls()
+	{
 		return [
 			'restart' => ['Reboot'],
 			'enable' => ['TurnON'],
@@ -116,17 +123,18 @@ class Plugin {
 		];
 	}
 
-	public static function getSoapCallParams($call, $vps) {
-		if ($call == 'CleanUpResources')
+	public static function getSoapCallParams($call, $vps)
+	{
+		if ($call == 'CleanUpResources') {
 			return [];
-		elseif ($call == 'ResizeVMHardDrive')
+		} elseif ($call == 'ResizeVMHardDrive') {
 			return [
 				'vmId' => $vps['vps_vzid'],
 				'updatedDriveSizeInGigabytes' => 1 * ((VPS_SLICE_HD * $vps['vps_slices']) + $vps['settings']['additional_hd']),
 				'hyperVAdminUsername' => 'Administrator',
 				'hyperVAdminPassword' => $vps['server_info']['vps_root'],
 			];
-		elseif ($call == 'CreateVM')
+		} elseif ($call == 'CreateVM') {
 			return [
 				'vmName' => $vps['vps_hostname'],
 				'vhdSize' => 1 * ((VPS_SLICE_HD * $vps['vps_slices']) + $vps['settings']['additional_hd']),
@@ -135,7 +143,7 @@ class Plugin {
 				'hyperVAdmin' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
-		elseif ($call == 'UpdateVM')
+		} elseif ($call == 'UpdateVM') {
 			return [
 				'vmId' => $vps['vps_vzid'],
 				'cpuCores' => in_array($vps['vps_custid'], [2773, 8, 2304]) ? ceil($vps['vps_slices'] / 2): ceil($vps['vps_slices'] / 4),
@@ -145,7 +153,7 @@ class Plugin {
 				'hyperVAdmin' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
-		elseif ($call == 'SetVMIOPS')
+		} elseif ($call == 'SetVMIOPS') {
 			return [
 				'vmId' => $vps['vps_vzid'],
 				'minimumOps' => 5 +  (5 * $vps['vps_slices']),
@@ -153,7 +161,7 @@ class Plugin {
 				'adminUsername' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
-		elseif ($call == 'SetVMAdminPassword')
+		} elseif ($call == 'SetVMAdminPassword') {
 			return [
 				'adminUser' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root'],
@@ -162,7 +170,7 @@ class Plugin {
 				'existingPassword' => VPS_HYPERV_PASSWORD,
 				'newPassword' => vps_get_password($vps['vps_id'])
 			];
-		elseif ($call == 'AddPublicIp') {
+		} elseif ($call == 'AddPublicIp') {
 			$db = get_module_db('default');
 			$db->query("select vlans_networks from vlans where vlans_id=(select ips_vlan from ips where ips_ip='{$vps['vps_ip']}')");
 			$db->next_record(MYSQL_ASSOC);
@@ -177,17 +185,18 @@ class Plugin {
 				'hyperVAdmin' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
-		} elseif (in_array($call, ['GetVMList']))
+		} elseif (in_array($call, ['GetVMList'])) {
 			return [
 				'hyperVAdmin' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
-		else
+		} else {
 			return [
 				'vmId' => $vps['vps_vzid'],
 				'hyperVAdmin' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
+		}
 	}
 
 	/**
@@ -196,7 +205,8 @@ class Plugin {
 	 * @param string $address the ip address or domain name of the remote APi server
 	 * @return array an array of the connection parameters for Soapclient
 	 */
-	public static function getSoapClientUrl($address) {
+	public static function getSoapClientUrl($address)
+	{
 		return 'https://'.$address.'/HyperVService/HyperVService.asmx?WSDL';
 	}
 
@@ -205,11 +215,12 @@ class Plugin {
 	 *
 	 * @return array an array of the connection parameters for Soapclient
 	 */
-	public static function getSoapClientParams() {
+	public static function getSoapClientParams()
+	{
 		return [
 			'encoding' => 'UTF-8',
-			'verifypeer' => FALSE,
-			'verifyhost' => FALSE,
+			'verifypeer' => false,
+			'verifyhost' => false,
 			'soap_version' => SOAP_1_2,
 			'trace' => 1,
 			'exceptions' => 1,
@@ -217,8 +228,8 @@ class Plugin {
 			'stream_context' => stream_context_create([
 				'ssl' => [
 					'ciphers' => 'RC4-SHA',
-					'verify_peer' => FALSE,
-					'verify_peer_name' => FALSE
+					'verify_peer' => false,
+					'verify_peer_name' => false
 			]])
 		];
 	}

@@ -7,15 +7,15 @@ ini_set('max_input_time', '0');
 ini_set('max_execution_time', '0');
 ini_set('display_errors', '1');
 ini_set('error_reporting', E_ALL);
-if ($_SERVER['argc'] < 2)
+if ($_SERVER['argc'] < 2) {
 	die("Call like {$_SERVER['argv'][0]} <id>\nwhere <id> is the VPS Master / Host Server ID\nuse 423 for Hyperv-dev and 440 for Hyperv1\n");
-$master = get_service_master($_SERVER['argv'][1], 'vps', TRUE);
+}
+$master = get_service_master($_SERVER['argv'][1], 'vps', true);
 try {
 	$params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();
 	$soap = new SoapClient("https://{$master['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", $params);
 	$response = $soap->GetVMList(['hyperVAdmin' => 'Administrator', 'adminPassword' => $master['vps_root']]);
 	print_r($response->GetVMListResult);
-
 } catch (Exception $e) {
 	echo 'Caught exception: '.$e->getMessage().PHP_EOL;
 }
