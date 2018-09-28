@@ -241,6 +241,7 @@ class Plugin
 	public static function queueCreate($vps) {
 		$db = get_module_db(self::$module);
 		$db2 = get_module_db(self::$module);
+		$settings = get_module_settings(self::$module);
 		myadmin_log('hyperv', 'info', "HyperV Got Here template {$vps['vps_os']}", __LINE__, __FILE__);
 		$vzname = $vps['vps_hostname'];
 		myadmin_log('hyperv', 'info', "HyperV Name {$vzname}  VZID {$vps['vzid']} ID {$vps['id']}", __LINE__, __FILE__);
