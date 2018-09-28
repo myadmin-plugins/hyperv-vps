@@ -626,7 +626,7 @@ class Plugin
 		$db2->query($q1, __LINE__, __FILE__);
 		myadmin_log('hyperv', 'info', $q2, __LINE__, __FILE__);
 		$db2->query($q2, __LINE__, __FILE__);
-		$db->query("update {$settings['TABLE']} set vps_os='" . $db->real_escape($serviceInfo['vps_os']) . "', vps_extra='" . $db->real_escape(myadmin_stringify($extra)) . "' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
+		$db->query("update {$settings['TABLE']} set vps_os='" . $db->real_escape($vps['vps_os']) . "', vps_extra='" . $db->real_escape(myadmin_stringify($extra)) . "' where {$settings['PREFIX']}_id='{$vps[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
 		return true;
 	}
 }
