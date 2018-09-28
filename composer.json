@@ -1,5 +1,5 @@
 {
-	"name": "detain/hyperv-vps",
+	"name": "detain/myadmin-hyperv-vps",
 	"type": "myadmin-plugin",
 	"description": "Hyperv Vps Class",
 	"keywords": [
