@@ -528,7 +528,7 @@ class Plugin
 				unset($soap);
 				$soap = new \SoapClient($url, $params);
 				$pass_respopassword = $soap->SetVMAdminPassword($password_parameters);
-				myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$vps['vzid']}, {$origrootpass}) = " . json_encode($pass_respopassword), __LINE__, __FILE__);
+				myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$vps['vzid']}, {$vps['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__);
 				if (isset($pass_respopassword->SetVMAdminPasswordResult->Status)) {
 					$status = trim($pass_respopassword->SetVMAdminPasswordResult->Status);
 				} else {
@@ -581,7 +581,7 @@ class Plugin
 			} elseif (isset($pass_respopassword) && $pass_respopassword->SetVMAdminPasswordResult->Success == 1) {
 				myadmin_log('hyperv', 'info', "SetVMAdminPassword {$vps['vzid']} Successful", __LINE__, __FILE__);
 				$finished = true;
-				if ($pass != $origrootpass) {
+				if ($pass != $vps['origrootpass']) {
 					$db->query(
 					make_insert_query('history_log', [
 						'history_id' => null,
@@ -596,7 +596,7 @@ class Plugin
 					]), __LINE__, __FILE__
 				);
 				}
-				vps_windows_welcome_email($vps['vps_id'], $module);
+				vps_windows_welcome_email($vps['vps_id'], self::$module);
 				continue;
 			}
 		}
@@ -605,7 +605,7 @@ class Plugin
 			unset($soap);
 			$soap = new \SoapClient($url, $params);
 			$pass_respopassword = $soap->SetVMAdminPassword($password_parameters);
-			myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$vps['vzid']}, {$origrootpass}) = " . json_encode($pass_respopassword), __LINE__, __FILE__);
+			myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$vps['vzid']}, {$vps['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__);
 			if (isset($pass_respopassword->SetVMAdminPasswordResult->Status)) {
 				$status = trim($pass_respopassword->SetVMAdminPasswordResult->Status);
 			} else {
@@ -626,6 +626,9 @@ class Plugin
 		$db2->query($q1, __LINE__, __FILE__);
 		myadmin_log('hyperv', 'info', $q2, __LINE__, __FILE__);
 		$db2->query($q2, __LINE__, __FILE__);
+		if ($need_extra_updated == true) {
+			$db->query("update {$settings['TABLE']} set vps_os='" . $db->real_escape($serviceInfo['vps_os']) . "', vps_extra='" . $db->real_escape(myadmin_stringify($extra)) . "' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
+		}
 		return true;
 	}
 }
