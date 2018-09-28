@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/myadmin-hyperv-vps.iml" filepath="$PROJECT_DIR$/.idea/myadmin-hyperv-vps.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/hyperv-vps.iml" filepath="$PROJECT_DIR$/.idea/hyperv-vps.iml" />
     </modules>
   </component>
 </project>
