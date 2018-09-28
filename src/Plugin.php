@@ -514,6 +514,7 @@ class Plugin
 		$tries = 0;
 		$max_tries = 30;
 		$finished = false;
+		$pass = $vps['origrootpass'];
 		$password_parameters = [
 			'adminUser' => 'Administrator',
 			'adminPassword' => $vps['server_info']['vps_root'],
