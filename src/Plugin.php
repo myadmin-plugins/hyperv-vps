@@ -353,9 +353,9 @@ class Plugin
 			myadmin_log('hyperv', 'info', "Invalid ID {$vps['vzid']} Length " . mb_strlen($vps['vzid']), __LINE__, __FILE__);
 			return false;
 		}
-		$need_extra_updated = true;
 		myadmin_log('hyperv', 'info', "Created HyperV VPS {$vps['id']} : {$vps['vzid']}", __LINE__, __FILE__);
 		$db->query("update {$settings['TABLE']} set vps_vzid='" . $db->real_escape($vps['vzid']) . "' where {$settings['PREFIX']}_id='{$vps['vps_id']}'", __LINE__, __FILE__);
+		$extra = $vps['extra'];
 		$extra['id'] = $vps['vzid'];
 		$extra['response'] = $response;
 		$update_parameters = [
@@ -626,9 +626,7 @@ class Plugin
 		$db2->query($q1, __LINE__, __FILE__);
 		myadmin_log('hyperv', 'info', $q2, __LINE__, __FILE__);
 		$db2->query($q2, __LINE__, __FILE__);
-		if ($need_extra_updated == true) {
-			$db->query("update {$settings['TABLE']} set vps_os='" . $db->real_escape($serviceInfo['vps_os']) . "', vps_extra='" . $db->real_escape(myadmin_stringify($extra)) . "' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
-		}
+		$db->query("update {$settings['TABLE']} set vps_os='" . $db->real_escape($serviceInfo['vps_os']) . "', vps_extra='" . $db->real_escape(myadmin_stringify($extra)) . "' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
 		return true;
 	}
 }
