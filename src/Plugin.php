@@ -2,6 +2,7 @@
 
 namespace Detain\MyAdminHyperv;
 
+require_once __DIR__.'/../../../workerman/statistics/Applications/Statistics/Clients/StatisticClient.php';
 use Detain\Hyperv\Hyperv;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
@@ -93,19 +94,23 @@ class Plugin
 				$calls = $queue_calls[$vps['action']];
 				foreach ($calls as $call) {
 					myadmin_log(self::$module, 'info', $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].')', __LINE__, __FILE__);
+					\StatisticClient::tick('Hyper-V', $call);
 					try {
 						$soap = new \SoapClient(self::getSoapClientUrl($vps['server_info']['vps_ip']), self::getSoapClientParams());
 						$response = $soap->$call(self::getSoapCallParams($call, $vps));
+						\StatisticClient::report('Hyper-V', $call, true, 0, '', STATISTICS_SERVER);
 					} catch (\SoapFault $e) {
 						$msg = $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
 						echo $msg.PHP_EOL;
 						myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
 						//$event['success'] = FALSE;
+						\StatisticClient::report('Hyper-V', $call, false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
 					} catch (\Exception $e) {
 						$msg = $vps['server_info']['vps_name'].' '.$call.' '.$vps['vps_hostname'].'(#'.$vps['vps_id'].'/'.$vps['vps_vzid'].') Caught exception: '.$e->getMessage();
 						echo $msg.PHP_EOL;
 						myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
 						//$event['success'] = FALSE;
+						\StatisticClient::report('Hyper-V', $call, false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
 					}
 				}
 			}
