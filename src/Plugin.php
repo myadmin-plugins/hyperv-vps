@@ -72,10 +72,10 @@ class Plugin
          * @var \MyAdmin\Settings $settings
          **/
         $settings = $event->getSubject();
-		$settings->add_text_setting(self::$module, __('Credentials'), 'vps_hyperv_password', __('HyperV Administrator Password'), __('Administrative password to login to the HyperV server'), $settings->get_setting('VPS_HYPERV_PASSWORD'));
-		$settings->add_text_setting(self::$module, __('Slice Costs'), 'vps_slice_hyperv_cost', __('HyperV VPS Cost Per Slice'), __('HyperV VPS will cost this much for 1 slice.'), $settings->get_setting('VPS_SLICE_HYPERV_COST'));
-		$settings->add_select_master(__(self::$module), __('Default Servers'), self::$module, 'new_vps_hyperv_server', __('HyperV NJ Server'), NEW_VPS_HYPERV_SERVER, 11, 1);
-		$settings->add_dropdown_setting(self::$module, __('Out of Stock'), 'outofstock_hyperv', __('Out Of Stock HyperV Secaucus'), __('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV'), ['0', '1'], ['No', 'Yes']);
+		$settings->add_text_setting(self::$module, _('Credentials'), 'vps_hyperv_password', _('HyperV Administrator Password'), _('Administrative password to login to the HyperV server'), $settings->get_setting('VPS_HYPERV_PASSWORD'));
+		$settings->add_text_setting(self::$module, _('Slice Costs'), 'vps_slice_hyperv_cost', _('HyperV VPS Cost Per Slice'), _('HyperV VPS will cost this much for 1 slice.'), $settings->get_setting('VPS_SLICE_HYPERV_COST'));
+		$settings->add_select_master(_(self::$module), _('Default Servers'), self::$module, 'new_vps_hyperv_server', _('HyperV NJ Server'), NEW_VPS_HYPERV_SERVER, 11, 1);
+		$settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv', _('Out Of Stock HyperV Secaucus'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV'), ['0', '1'], ['No', 'Yes']);
 	}
 
 	/**
