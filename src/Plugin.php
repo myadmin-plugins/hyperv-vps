@@ -172,8 +172,8 @@ class Plugin
 		} elseif ($call == 'SetVMIOPS') {
 			return [
 				'vmId' => $vps['vps_vzid'],
-				'minimumOps' => 5 +  (5 * $vps['vps_slices']),
-				'maximumOps' => 250 + (50 * $vps['vps_slices']),
+                'minimumOps' => VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $vps['vps_slices']),
+                'maximumOps' => VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $vps['vps_slices']),
 				'adminUsername' => 'Administrator',
 				'adminPassword' => $vps['server_info']['vps_root']
 			];
@@ -381,12 +381,12 @@ class Plugin
 		];
 		$iops_parameters = [
 			'vmId' => $vps['vzid'],
-			'minimumOps' => 2 + (2 * $vps['vps_slices']),
-			'maximumOps' => 250 + (100 * $vps['vps_slices']),
+			'minimumOps' => VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $vps['vps_slices']),
+			'maximumOps' => VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $vps['vps_slices']),
 			'adminUsername' => 'Administrator',
 			'adminPassword' => $vps['server_info']['vps_root']
 		];
-		myadmin_log('hyperv', 'info', "SetVMIOPS({$vps['vzid']}, " . (5 + (5 * $vps['vps_slices'])).','.(150 + (50 * $vps['vps_slices'])).')', __LINE__, __FILE__);
+		myadmin_log('hyperv', 'info', "SetVMIOPS({$vps['vzid']}, " . (VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $vps['vps_slices'])).','.(VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $vps['vps_slices'])).')', __LINE__, __FILE__);
 		try {
 			$soap = new \SoapClient($url, $params);
 			$response = $soap->SetVMIOPS($iops_parameters);
