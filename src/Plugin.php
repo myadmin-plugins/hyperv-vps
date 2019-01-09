@@ -164,7 +164,7 @@ class Plugin
 		} elseif ($call == 'UpdateVM') {
 			return [
 				'vmId' => $vps['vps_vzid'],
-				'cpuCores' => in_array($vps['vps_custid'], [2773, 8, 2304]) ? ceil($vps['vps_slices'] / 2): ceil($vps['vps_slices'] / 4),
+				'cpuCores' => $vps['vps_slices'],
 				'ramMB' => 1 * VPS_SLICE_RAM * $vps['vps_slices'],
 				'bootFromCD' => false,
 				'numLockEnabled' => true,
