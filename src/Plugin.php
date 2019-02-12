@@ -3,6 +3,7 @@
 namespace Detain\MyAdminHyperv;
 
 require_once __DIR__.'/../../../workerman/statistics/Applications/Statistics/Clients/StatisticClient.php';
+
 use Detain\Hyperv\Hyperv;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
