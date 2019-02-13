@@ -277,7 +277,7 @@ class Plugin
 			try {
 				$soap = new \SoapClient($url, $params);
 				$response = $soap->TurnOff($parameters);
-                \StatisticClient::report('Hyper-V', 'TurnOff', true, 0, '', STATISTICS_SERVER);
+                //\StatisticClient::report('Hyper-V', 'TurnOff', true, 0, '', STATISTICS_SERVER);
 				if (isset($response->TurnOffResult->Status)) {
 					$status = $response->TurnOffResult->Status;
 				} else {
@@ -286,15 +286,16 @@ class Plugin
 				myadmin_log('hyperv', 'info', "Response Status: {$status}", __LINE__, __FILE__);
 			} catch (\Exception $e) {
 				myadmin_log('hyperv', 'warning', 'TurnOff Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
-                \StatisticClient::report('Hyper-V', 'TurnOff', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
+                //\StatisticClient::report('Hyper-V', 'TurnOff', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
 			}
+            \StatisticClient::report('Hyper-V', 'TurnOff', true, 0, '', STATISTICS_SERVER);
 			$progress++;
 			$db->query("update vps set vps_server_status='{$progress}' where vps_id={$vps['id']}", __LINE__, __FILE__);
 			\StatisticClient::tick('Hyper-V', 'DeleteVM');
             try {
 				$soap = new \SoapClient($url, $params);
 				$response = $soap->DeleteVM($parameters);
-				\StatisticClient::report('Hyper-V', 'DeleteVM', true, 0, '', STATISTICS_SERVER);
+				//\StatisticClient::report('Hyper-V', 'DeleteVM', true, 0, '', STATISTICS_SERVER);
                 if (isset($response->DeleteVMResult->Status)) {
 					$status = $response->DeleteVMResult->Status;
 				} else {
@@ -303,8 +304,9 @@ class Plugin
 				myadmin_log('hyperv', 'info', "Response Status: {$status}", __LINE__, __FILE__);
 			} catch (\Exception $e) {
 				myadmin_log('hyperv', 'warning', 'DeleteVM Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
-                \StatisticClient::report('Hyper-V', 'DeleteVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
+                //\StatisticClient::report('Hyper-V', 'DeleteVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
 			}
+            \StatisticClient::report('Hyper-V', 'DeleteVM', true, 0, '', STATISTICS_SERVER);
 			$progress++;
 			$db->query("update vps set vps_server_status='{$progress}' where vps_id={$vps['id']}", __LINE__, __FILE__);
 		}
