@@ -702,7 +702,7 @@ class Plugin
 		$q2 = "update vps_master_details set vps_last_install_time={$install_time} where vps_id={$vps['server_info']['vps_id']}";
 		myadmin_log('hyperv', 'info', $q1, __LINE__, __FILE__);
 		$db2->query($q1, __LINE__, __FILE__);
-		myadmin_log('hyperv', 'info', $q2, __LINE__, __FILE__);
+		myadmin_log('hyperv', 'info', $q2, __LINE__, __FILE__, self::$module);
 		$db2->query($q2, __LINE__, __FILE__);
 		$db->query("update {$settings['TABLE']} set vps_os='" . $db->real_escape($vps['vps_os']) . "', vps_extra='" . $db->real_escape(myadmin_stringify($extra)) . "' where {$settings['PREFIX']}_id='{$vps[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
 		return true;
