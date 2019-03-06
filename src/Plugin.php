@@ -92,18 +92,19 @@ class Plugin
     {
         if (in_array($event['type'], [get_service_define('HYPERV')])) {
             $serviceInfo = $event->getSubject();
-            myadmin_log(self::$module, 'info', self::$name.' Queue '.ucwords(str_replace('_', ' ', $serviceInfo['action'])).' for VPS '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].')', __LINE__, __FILE__);
+            $settings = get_module_settings(self::$module);
+            myadmin_log(self::$module, 'info', self::$name.' Queue '.ucwords(str_replace('_', ' ', $serviceInfo['action'])).' for VPS '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].')', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             $queue_calls = self::getQueueCalls();
             $method = 'queue'.str_replace('_','',ucwords($serviceInfo['action'], '_'));
             if (method_exists(__CLASS__, $method)) {
-                myadmin_log(self::$module, 'info', $serviceInfo['server_info']['vps_name'].' '.$method.' '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].')', __LINE__, __FILE__);
+                myadmin_log(self::$module, 'info', $serviceInfo['server_info']['vps_name'].' '.$method.' '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].')', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 call_user_func([__CLASS__, $method], $serviceInfo);
             } elseif (!isset($queue_calls[$serviceInfo['action']])) {
-                myadmin_log(self::$module, 'error', 'Call '.$serviceInfo['action'].' for VPS '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].') Does not Exist for '.self::$name, __LINE__, __FILE__);
+                myadmin_log(self::$module, 'error', 'Call '.$serviceInfo['action'].' for VPS '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].') Does not Exist for '.self::$name, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             } else {
                 $calls = $queue_calls[$serviceInfo['action']];
                 foreach ($calls as $call) {
-                    myadmin_log(self::$module, 'info', $serviceInfo['server_info']['vps_name'].' '.$call.' '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].')', __LINE__, __FILE__);
+                    myadmin_log(self::$module, 'info', $serviceInfo['server_info']['vps_name'].' '.$call.' '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].')', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                     \StatisticClient::tick('Hyper-V', $call);
                     try {
                         $soap = new \SoapClient(self::getSoapClientUrl($serviceInfo['server_info']['vps_ip']), self::getSoapClientParams());
@@ -112,13 +113,13 @@ class Plugin
                     } catch (\SoapFault $e) {
                         $msg = $serviceInfo['server_info']['vps_name'].' '.$call.' '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].') Caught exception: '.$e->getMessage();
                         echo $msg.PHP_EOL;
-                        myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+                        myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                         //$event['success'] = FALSE;
                         \StatisticClient::report('Hyper-V', $call, false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
                     } catch (\Exception $e) {
                         $msg = $serviceInfo['server_info']['vps_name'].' '.$call.' '.$serviceInfo['vps_hostname'].'(#'.$serviceInfo['vps_id'].'/'.$serviceInfo['vps_vzid'].') Caught exception: '.$e->getMessage();
                         echo $msg.PHP_EOL;
-                        myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__);
+                        myadmin_log(self::$module, 'error', $msg, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                         //$event['success'] = FALSE;
                         \StatisticClient::report('Hyper-V', $call, false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
                     }
@@ -257,9 +258,9 @@ class Plugin
         $db = get_module_db(self::$module);
         $db2 = get_module_db(self::$module);
         $settings = get_module_settings(self::$module);
-        myadmin_log('hyperv', 'info', "HyperV Got Here template {$serviceInfo['vps_os']}", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "HyperV Got Here template {$serviceInfo['vps_os']}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $vzname = $serviceInfo['vps_hostname'];
-        myadmin_log('hyperv', 'info', "HyperV Name {$vzname}  VZID {$serviceInfo['vzid']} ID {$serviceInfo['id']}", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "HyperV Name {$vzname}  VZID {$serviceInfo['vzid']} ID {$serviceInfo['id']}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $memory = $serviceInfo['settings']['slice_ram'] * $serviceInfo['vps_slices'];
         $diskspace = ($serviceInfo['settings']['slice_hd'] * $serviceInfo['vps_slices']) + $serviceInfo['settings']['additional_hd'];
         $progress = 0;
@@ -267,7 +268,7 @@ class Plugin
         $url = "https://{$serviceInfo['server_info']['vps_ip']}/HyperVService/HyperVService.asmx?WSDL";
         $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
         if (is_uuid($serviceInfo['vps_vzid'])) {
-            myadmin_log('hyperv', 'info', 'Existing UUID value found, attempting to delete', __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', 'Existing UUID value found, attempting to delete', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             $parameters = [
                 'vmId' => $serviceInfo['vps_vzid'],
                 'hyperVAdmin' => 'Administrator',
@@ -283,9 +284,9 @@ class Plugin
                 } else {
                     $status = $response->TurnOffResult->Success;
                 }
-                myadmin_log('hyperv', 'info', "Response Status: {$status}", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "Response Status: {$status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'warning', 'TurnOff Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'warning', 'TurnOff Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 //\StatisticClient::report('Hyper-V', 'TurnOff', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             }
             \StatisticClient::report('Hyper-V', 'TurnOff', true, 0, '', STATISTICS_SERVER);
@@ -301,9 +302,9 @@ class Plugin
                 } else {
                     $status = $response->DeleteVMResult->Success;
                 }
-                myadmin_log('hyperv', 'info', "Response Status: {$status}", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "Response Status: {$status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'warning', 'DeleteVM Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'warning', 'DeleteVM Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 //\StatisticClient::report('Hyper-V', 'DeleteVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             }
             \StatisticClient::report('Hyper-V', 'DeleteVM', true, 0, '', STATISTICS_SERVER);
@@ -319,7 +320,7 @@ class Plugin
             'hyperVAdmin' => 'Administrator',
             'adminPassword' => $serviceInfo['server_info']['vps_root']
         ];
-        myadmin_log('hyperv', 'info', "CreateVM({$vzname}, {$diskspace}, {$memory}, {$serviceInfo['vps_os']})", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "CreateVM({$vzname}, {$diskspace}, {$memory}, {$serviceInfo['vps_os']})", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $serviceInfo['vzid'] = '';
         \StatisticClient::tick('Hyper-V', 'CleanUpResources');
         try {
@@ -327,7 +328,7 @@ class Plugin
             $response = $soap->CleanUpResources();
             \StatisticClient::report('Hyper-V', 'CleanUpResources', true, 0, '', STATISTICS_SERVER);
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'info', 'CleanUpResources Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', 'CleanUpResources Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             \StatisticClient::report('Hyper-V', 'CleanUpResources', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
         }
         \StatisticClient::tick('Hyper-V', 'CreateVM');
@@ -336,12 +337,12 @@ class Plugin
             $response = $soap->CreateVM($create_parameters);
             \StatisticClient::report('Hyper-V', 'CreateVM', true, 0, '', STATISTICS_SERVER);
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode($create_parameters).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode($create_parameters).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             \StatisticClient::report('Hyper-V', 'CreateVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             return false;
         }
-        myadmin_log('hyperv', 'info', json_encode($response->CreateVMResult), __LINE__, __FILE__);
-        myadmin_log('hyperv', 'info', $response->CreateVMResult->Status, __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', json_encode($response->CreateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+        myadmin_log('hyperv', 'info', $response->CreateVMResult->Status, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         if (trim($response->CreateVMResult->Status) == 'Provider load failure') {
             $progress = 25;
             $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
@@ -351,7 +352,7 @@ class Plugin
                 $response = $soap->CleanUpResources();
                 \StatisticClient::report('Hyper-V', 'CleanUpResources', true, 0, '', STATISTICS_SERVER);
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'info', 'CleanUpResources Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', 'CleanUpResources Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 \StatisticClient::report('Hyper-V', 'CleanUpResources', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             }
             \StatisticClient::tick('Hyper-V', 'CreateVM');
@@ -359,21 +360,21 @@ class Plugin
                 $soap = new \SoapClient($url, $params);
                 $response = $soap->CreateVM($create_parameters);
                 \StatisticClient::report('Hyper-V', 'CreateVM', true, 0, '', STATISTICS_SERVER);
-                myadmin_log('hyperv', 'info', json_encode($response->CreateVMResult), __LINE__, __FILE__);
-                myadmin_log('hyperv', 'info', $response->CreateVMResult->Status, __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', json_encode($response->CreateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+                myadmin_log('hyperv', 'info', $response->CreateVMResult->Status, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode($create_parameters).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode($create_parameters).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 \StatisticClient::report('Hyper-V', 'CreateVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             }
         }
         //$response = $soap->CreateVirtualMachine($create_parameters);
         $progress = 50;
         $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
-        myadmin_log('hyperv', 'info', 'finished updating the db', __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', 'finished updating the db', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $serviceInfo['vzid'] = $response->CreateVMResult->Status;
         //$vps['vzid'] = $response->CreateVirtualMachineResult->Status;
         if (mb_strlen($serviceInfo['vzid']) != 36) {
-            myadmin_log('hyperv', 'info', "id should not be '{$serviceInfo['vzid']}' " . mb_strlen($serviceInfo['vzid']).' chars long, doing a match up and looking', __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', "id should not be '{$serviceInfo['vzid']}' " . mb_strlen($serviceInfo['vzid']).' chars long, doing a match up and looking', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             unset($soap);
             \StatisticClient::tick('Hyper-V', 'GetVMList');
             try {
@@ -400,10 +401,10 @@ class Plugin
         $progress++;
         $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
         if (mb_strlen($serviceInfo['vzid']) != 36) {
-            myadmin_log('hyperv', 'info', "Invalid ID {$serviceInfo['vzid']} Length " . mb_strlen($serviceInfo['vzid']), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', "Invalid ID {$serviceInfo['vzid']} Length " . mb_strlen($serviceInfo['vzid']), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             return false;
         }
-        myadmin_log('hyperv', 'info', "Created HyperV VPS {$serviceInfo['id']} : {$serviceInfo['vzid']}", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "Created HyperV VPS {$serviceInfo['id']} : {$serviceInfo['vzid']}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $db->query("update {$settings['TABLE']} set vps_vzid='" . $db->real_escape($serviceInfo['vzid']) . "' where {$settings['PREFIX']}_id='{$serviceInfo['vps_id']}'", __LINE__, __FILE__);
         $extra = $serviceInfo['extra'];
         $extra['id'] = $serviceInfo['vzid'];
@@ -424,15 +425,15 @@ class Plugin
             'adminUsername' => 'Administrator',
             'adminPassword' => $serviceInfo['server_info']['vps_root']
         ];
-        myadmin_log('hyperv', 'info', "SetVMIOPS({$serviceInfo['vzid']}, " . (VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $serviceInfo['vps_slices'])).','.(VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $serviceInfo['vps_slices'])).')', __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "SetVMIOPS({$serviceInfo['vzid']}, " . (VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $serviceInfo['vps_slices'])).','.(VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $serviceInfo['vps_slices'])).')', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         \StatisticClient::tick('Hyper-V', 'SetVMIOPS');
         try {
             $soap = new \SoapClient($url, $params);
             $response = $soap->SetVMIOPS($iops_parameters);
             \StatisticClient::report('Hyper-V', 'SetVMIOPS', true, 0, '', STATISTICS_SERVER);
-            myadmin_log('hyperv', 'info', 'SetVMIOPS Response: '.json_encode($response->SetVMIOPSResult), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', 'SetVMIOPS Response: '.json_encode($response->SetVMIOPSResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'error', 'SetVMIOPS Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'error', 'SetVMIOPS Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             \StatisticClient::report('Hyper-V', 'SetVMIOPS', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
         }
         function_requirements('get_server_ip_info');
@@ -452,11 +453,11 @@ class Plugin
             'adminPassword' => $serviceInfo['server_info']['vps_root']
         ];
         /*
-        myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         try {
             $response = $soap->AddPublicIp($ip_parameters);
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'error', 'Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'error', 'Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             return false;
         }
         */
@@ -465,30 +466,30 @@ class Plugin
             $soap = new \SoapClient($url, $params);
             $response = $soap->UpdateVM($update_parameters);
             \StatisticClient::report('Hyper-V', 'UpdateVM', true, 0, '', STATISTICS_SERVER);
-            myadmin_log('hyperv', 'info', 'UpdateVM returned '.json_encode($response->UpdateVMResult), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', 'UpdateVM returned '.json_encode($response->UpdateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if (isset($response->UpdateVMResult->Status)) {
                 $status = $response->UpdateVMResult->Status;
             } else {
                 $status = $response->UpdateVMResult->Success;
             }
-            myadmin_log('hyperv', 'info', "UpdateVM Response Status: {$status}", __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', "UpdateVM Response Status: {$status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'error', 'UpdateVM Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'error', 'UpdateVM Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             \StatisticClient::report('Hyper-V', 'UpdateVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
         }
         $parameters = [
             'vmId' => $serviceInfo['vzid'], 'hyperVAdmin' => 'Administrator', 'adminPassword' => $serviceInfo['server_info']['vps_root']
         ];
-        //myadmin_log('hyperv', 'info', "TurnON(" . str_replace("\n", "", json_encode($parameters)) . ")", __LINE__, __FILE__);
-        myadmin_log('hyperv', 'info', "TurnON({$serviceInfo['vzid']})", __LINE__, __FILE__);
+        //myadmin_log('hyperv', 'info', "TurnON(" . str_replace("\n", "", json_encode($parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+        myadmin_log('hyperv', 'info', "TurnON({$serviceInfo['vzid']})", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         \StatisticClient::tick('Hyper-V', 'TurnON');
         try {
             $soap = new \SoapClient($url, $params);
             $turnon_response = $soap->TurnON($parameters);
             \StatisticClient::report('Hyper-V', 'TurnON', true, 0, '', STATISTICS_SERVER);
-            myadmin_log('hyperv', 'info', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Status " . $turnon_response->TurnONResult->Status, __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Status " . $turnon_response->TurnONResult->Status, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'error', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'error', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             \StatisticClient::report('Hyper-V', 'TurnON', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             return false;
         }
@@ -500,9 +501,9 @@ class Plugin
                 $soap = new \SoapClient($url, $params);
                 $turnon_response = $soap->TurnON($parameters);
                 \StatisticClient::report('Hyper-V', 'TurnON', true, 0, '', STATISTICS_SERVER);
-                myadmin_log('hyperv', 'info', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Status " . $turnon_response->TurnONResult->Status, __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Status " . $turnon_response->TurnONResult->Status, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'error', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'error', "TurnON {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 \StatisticClient::report('Hyper-V', 'TurnON', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
                 return false;
             }
@@ -510,18 +511,18 @@ class Plugin
             $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
         }
         if (preg_match('/Failed to change virtual system state. Error Code= JobStarted . Current state =.*/', trim($turnon_response->TurnONResult->Status))) {
-            myadmin_log('hyperv', 'info', "Bailing on hyperv create ({$serviceInfo['id']} : {$serviceInfo['vzid']}) - unable to finish", __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', "Bailing on hyperv create ({$serviceInfo['id']} : {$serviceInfo['vzid']}) - unable to finish", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             $progress = 0;
             $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
             return false;
         }
         /*
-        //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__);
-        myadmin_log('hyperv', 'info', "AddPublicIp(" . json_encode($ip_parameters) . ")", __LINE__, __FILE__);
+        //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+        myadmin_log('hyperv', 'info', "AddPublicIp(" . json_encode($ip_parameters) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         try {
             $ip_response = $soap->AddPublicIp($ip_parameters);
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'error', 'Caught exception: '.$e->getMessage(), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'error', 'Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             return false;
         }
         */
@@ -529,8 +530,8 @@ class Plugin
         $current_ip = false;
         while ($current_ip === false || $current_ip = '') {
             sleep(20);
-            //myadmin_log('hyperv', 'info', "(" . str_replace("\n", "", json_encode($getvm_parameters)) . ")", __LINE__, __FILE__);
-            //myadmin_log('hyperv', 'info', "GetVM {$vps['id']} : {$vps['vzid']}", __LINE__, __FILE__);
+            //myadmin_log('hyperv', 'info', "(" . str_replace("\n", "", json_encode($getvm_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+            //myadmin_log('hyperv', 'info', "GetVM {$vps['id']} : {$vps['vzid']}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             \StatisticClient::tick('Hyper-V', 'GetVM');
             try {
                 unset($soap);
@@ -543,7 +544,7 @@ class Plugin
                 unset($getvm_response);
                 $getvm_response = $soap->GetVM($parameters);
                 \StatisticClient::report('Hyper-V', 'GetVM', true, 0, '', STATISTICS_SERVER);
-                myadmin_log('hyperv', 'info', "GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} got {$getvm_response->GetVMResult->Status}", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} got {$getvm_response->GetVMResult->Status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 if (isset($getvm_response->GetVMResult->IP) && trim($getvm_response->GetVMResult->IP) != '') {
                     $current_ip = trim($getvm_response->GetVMResult->IP);
                     break;
@@ -555,7 +556,7 @@ class Plugin
                 }
                 */
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'warning', "GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'warning', "GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 \StatisticClient::report('Hyper-V', 'GetVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
                 //return false;
             }
@@ -563,16 +564,16 @@ class Plugin
             $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
         }
         if ($current_ip != $serviceInfo['ip']) {
-            //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__);
+            //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             \StatisticClient::tick('Hyper-V', 'AddPublicIp');
             try {
                 unset($soap);
                 $soap = new \SoapClient($url, $params);
                 $ip_response = $soap->AddPublicIp($ip_parameters);
                 \StatisticClient::report('Hyper-V', 'AddPublicIp', true, 0, '', STATISTICS_SERVER);
-                myadmin_log('hyperv', 'info', "AddPublicIp({$serviceInfo['vzid']}, {$serviceInfo['ip']}) returned " . json_encode($ip_response->AddPublicIpResult), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "AddPublicIp({$serviceInfo['vzid']}, {$serviceInfo['ip']}) returned " . json_encode($ip_response->AddPublicIpResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'error', "AddPublicIp {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'error', "AddPublicIp {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 \StatisticClient::report('Hyper-V', 'AddPublicIp', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
                 return false;
             }
@@ -599,7 +600,7 @@ class Plugin
                 $soap = new \SoapClient($url, $params);
                 $pass_respopassword = $soap->SetVMAdminPassword($password_parameters);
                 \StatisticClient::report('Hyper-V', 'SetVMAdminPassword', true, 0, '', STATISTICS_SERVER);
-                myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, {$serviceInfo['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, {$serviceInfo['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 if (isset($pass_respopassword->SetVMAdminPasswordResult->Status)) {
                     $status = trim($pass_respopassword->SetVMAdminPasswordResult->Status);
                 } else {
@@ -618,12 +619,12 @@ class Plugin
                 $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
             }
             $tries++;
-            myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} (Attempt {$tries}/{$max_tries}) {$status}", __LINE__, __FILE__);
+            myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} (Attempt {$tries}/{$max_tries}) {$status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if ($exception == true || $status == 'Exception has been thrown by the target of an invocation.') {
                 $exception = false;
                 $pass = generateRandomString(10, 2, 2, 1, 1);
                 $password_parameters['newPassword'] = $pass;
-                myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} Assuming password not complex enough , setting it to a random password, SetVMAdminPassword new pass {$pass}", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} Assuming password not complex enough , setting it to a random password, SetVMAdminPassword new pass {$pass}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 \StatisticClient::tick('Hyper-V', 'SetVMAdminPassword');
                 try {
                     unset($soap);
@@ -643,18 +644,18 @@ class Plugin
                     $progress++;
                     $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
                 }
-                myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} (Attempt {$tries}/{$max_tries}) {$status}", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} (Attempt {$tries}/{$max_tries}) {$status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             }
             if ($status == 'Access is denied.') {
-                myadmin_log('hyperv', 'info', "SetVMAdminPassword (Attempt {$tries}/{$max_tries}) Invalid Template Password?", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "SetVMAdminPassword (Attempt {$tries}/{$max_tries}) Invalid Template Password?", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             }
             if ($exception == true || ($status == 'The network path was not found.')) {
-                //myadmin_log('hyperv', 'info', "SetVMAdminPassword (Attempt {$tries}/{$max_tries}) Sleeping", __LINE__, __FILE__);
+                //myadmin_log('hyperv', 'info', "SetVMAdminPassword (Attempt {$tries}/{$max_tries}) Sleeping", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 sleep(10);
-                myadmin_log('hyperv', 'info', "SetVMAdminPassword {$serviceInfo['vzid']} (Attempt {$tries}/{$max_tries}) Finished Sleeping", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "SetVMAdminPassword {$serviceInfo['vzid']} (Attempt {$tries}/{$max_tries}) Finished Sleeping", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 continue;
             } elseif (isset($pass_respopassword) && $pass_respopassword->SetVMAdminPasswordResult->Success == 1) {
-                myadmin_log('hyperv', 'info', "SetVMAdminPassword {$serviceInfo['vzid']} Successful", __LINE__, __FILE__);
+                myadmin_log('hyperv', 'info', "SetVMAdminPassword {$serviceInfo['vzid']} Successful", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 $finished = true;
                 if ($pass != $serviceInfo['origrootpass']) {
                     $db->query(
@@ -682,7 +683,7 @@ class Plugin
             $soap = new \SoapClient($url, $params);
             $pass_respopassword = $soap->SetVMAdminPassword($password_parameters);
             \StatisticClient::report('Hyper-V', 'SetVMAdminPassword', true, 0, '', STATISTICS_SERVER);
-            myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, {$serviceInfo['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__);
+            myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, {$serviceInfo['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if (isset($pass_respopassword->SetVMAdminPasswordResult->Status)) {
                 $status = trim($pass_respopassword->SetVMAdminPasswordResult->Status);
             } else {
@@ -692,17 +693,17 @@ class Plugin
             $status = trim($e->getMessage());
             \StatisticClient::report('Hyper-V', 'SetVMAdminPassword', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
         }
-        myadmin_log('hyperv', 'info', "Start Time {$start_time}", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "Start Time {$start_time}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $end_time = time();
-        myadmin_log('hyperv', 'info', "End Time {$end_time}", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "End Time {$end_time}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $install_time = $end_time - $start_time;
-        myadmin_log('hyperv', 'info', "Install Time {$install_time}", __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', "Install Time {$install_time}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $progress = 100;
         $q1 = "update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}";
         $q2 = "update vps_master_details set vps_last_install_time={$install_time} where vps_id={$serviceInfo['server_info']['vps_id']}";
-        myadmin_log('hyperv', 'info', $q1, __LINE__, __FILE__);
+        myadmin_log('hyperv', 'info', $q1, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $db2->query($q1, __LINE__, __FILE__);
-        myadmin_log('hyperv', 'info', $q2, __LINE__, __FILE__, self::$module);
+        myadmin_log('hyperv', 'info', $q2, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $db2->query($q2, __LINE__, __FILE__);
         $db->query("update {$settings['TABLE']} set vps_os='" . $db->real_escape($serviceInfo['vps_os']) . "', vps_extra='" . $db->real_escape(myadmin_stringify($extra)) . "' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
         return true;
