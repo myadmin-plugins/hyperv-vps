@@ -47,7 +47,7 @@ class Plugin
 	{
 		$serviceClass = $event->getSubject();
 		if ($event['type'] == get_service_define('HYPERV')) {
-			myadmin_log(self::$module, 'info', 'Hyperv Activation', __LINE__, __FILE__);
+			myadmin_log(self::$module, 'info', 'Hyperv Activation', __LINE__, __FILE__, self::$module, $serviceClass->getId());
 			$event->stopPropagation();
 		}
 	}
