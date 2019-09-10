@@ -237,6 +237,12 @@ class Plugin
 	 */
 	public static function getSoapClientParams()
 	{
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+        ]]);
 		return [
 			'encoding' => 'UTF-8',
 			'verifypeer' => false,
@@ -245,13 +251,8 @@ class Plugin
 			'trace' => 1,
 			'exceptions' => 1,
 			'connection_timeout' => 600,
-			'stream_context' => stream_context_create([
-				'ssl' => [
-					'ciphers' => 'RC4-SHA',
-					'verify_peer' => false,
-					'verify_peer_name' => false,
-                    'allow_self_signed' => true,
-			]])
+            'stream_context' => $context,
+            'context' => $context,
 		];
 	}
 
