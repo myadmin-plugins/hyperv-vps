@@ -249,7 +249,8 @@ class Plugin
 				'ssl' => [
 					'ciphers' => 'RC4-SHA',
 					'verify_peer' => false,
-					'verify_peer_name' => false
+					'verify_peer_name' => false,
+                    'allow_self_signed' => true,
 			]])
 		];
 	}
