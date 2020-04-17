@@ -19,7 +19,7 @@ try {
 		'vmName' => $_SERVER['argv'][2],
 		'vhdSize' => $_SERVER['argv'][3],
 		'ramSize' => $_SERVER['argv'][4],
-		'osToInstall' => 'Windows2012Standard',
+		'osToInstall' => 'Windows2016Standard',
 		'hyperVAdmin' => 'Administrator',
 		'adminPassword' => $master['vps_root']
 		]
