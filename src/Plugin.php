@@ -531,7 +531,10 @@ class Plugin
 		*/
 		// loopuntil it finds there is an ip (any) set (booted up)
 		$current_ip = false;
-		while ($current_ip === false || $current_ip = '') {
+		$maxLoop = 100;
+		$loop = 0;
+		while ($current_ip === false || $current_ip = '' || $loop >= $maxLoop) {
+			$loop++;
 			sleep(20);
 			//myadmin_log('hyperv', 'info', "(" . str_replace("\n", "", json_encode($getvm_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
 			//myadmin_log('hyperv', 'info', "GetVM {$vps['id']} : {$vps['vzid']}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
