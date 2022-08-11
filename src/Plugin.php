@@ -82,7 +82,8 @@ class Plugin
         $settings->setTarget('module');
         $settings->add_select_master(_(self::$module), _('Default Servers'), self::$module, 'new_vps_hyperv_server', _('HyperV NJ Server'), NEW_VPS_HYPERV_SERVER, 11, 1);
         $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv', _('Out Of Stock HyperV Secaucus'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV'), ['0', '1'], ['No', 'Yes']);
-        $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hypervla', _('Out Of Stock HyperV LA'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERVLA'), ['0', '1'], ['No', 'Yes']);
+        $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv_la', _('Out Of Stock HyperV LA'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV_LA'), ['0', '1'], ['No', 'Yes']);
+        $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv_ny', _('Out Of Stock HyperV NY'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV_NY'), ['0', '1'], ['No', 'Yes']);
         $settings->setTarget('global');
     }
 
