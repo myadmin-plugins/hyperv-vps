@@ -272,6 +272,12 @@ class Plugin
         $params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();
         $url = "https://{$serviceInfo['server_info']['vps_ip']}/HyperVService/HyperVService.asmx?WSDL";
         $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
+        $db->query("select * from vps_templates where template_type=11 and template_available=1 and template_file='{$serviceInfo['vps_os']}'");
+        if ($db->num_rows() == 0) {
+            $db->query("select * from vps_templates where template_type=11 and template_available=1 limit 1");
+            $db->next_record(MYSQL_ASSOC);
+            $serviceInfo['vps_os'] = $db->Record['template_file'];
+        }
         if (is_uuid($serviceInfo['vps_vzid'])) {
             myadmin_log('hyperv', 'info', 'Existing UUID value found, attempting to delete', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             $parameters = [
