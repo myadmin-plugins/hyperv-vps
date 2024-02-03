@@ -19,7 +19,7 @@ try {
             'vmName' => $_SERVER['argv'][2],
             'vhdSize' => $_SERVER['argv'][3],
             'ramSize' => $_SERVER['argv'][4],
-            'osToInstall' => isset($_SERVER['argv'][5]) ? $_SERVER['argv'][5] : 'Windows2016Standard',
+            'osToInstall' => $_SERVER['argv'][5] ?? 'Windows2016Standard',
             'hyperVAdmin' => 'Administrator',
             'adminPassword' => $master['vps_root']
         ]
