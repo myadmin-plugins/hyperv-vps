@@ -190,7 +190,7 @@ class Plugin
                 'vmId' => $serviceInfo['vps_vzid'],
                 'username' => 'Administrator',
                 'existingPassword' => VPS_HYPERV_PASSWORD,
-                'newPassword' => vps_get_password($serviceInfo['vps_id'])
+                'newPassword' => vps_get_password($serviceInfo['vps_id'], $serviceInfo['vps_custid'])
             ];
         } elseif ($call == 'AddPublicIp') {
             $db = get_module_db('default');
