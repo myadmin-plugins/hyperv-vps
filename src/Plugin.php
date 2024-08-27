@@ -168,7 +168,7 @@ class Plugin
         } elseif ($call == 'UpdateVM') {
             return [
                 'vmId' => $serviceInfo['vps_vzid'],
-                'cpuCores' => $serviceInfo['vps_slices'],
+                'cpuCores' => ceil((($serviceInfo['vps_slices'] - 2) / 2) + 1),
                 'ramMB' => 1 * VPS_SLICE_RAM * $serviceInfo['vps_slices'],
                 'bootFromCD' => false,
                 'numLockEnabled' => true,
@@ -422,7 +422,7 @@ class Plugin
         $extra['response'] = $response;
         $update_parameters = [
             'vmId' => $serviceInfo['vzid'],
-            'cpuCores' => $serviceInfo['vps_slices'],
+            'cpuCores' => ceil((($serviceInfo['vps_slices'] - 2) / 2) + 1),
             'ramMB' => 1 * VPS_SLICE_RAM * $serviceInfo['vps_slices'],
             'bootFromCD' => false,
             'numLockEnabled' => true,
