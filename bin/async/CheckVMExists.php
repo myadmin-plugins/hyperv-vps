@@ -12,8 +12,9 @@ if ($_SERVER['argc'] < 3) {
 }
 try {
     $master = get_service_master($_SERVER['argv'][1], 'vps', true);
+    $loop = React\EventLoop\Factory::create();
     $connector = new React\Socket\Connector(['tls' => ['verify_peer' => false, 'verify_peer_name' => false]]);
-    $browser = new React\Http\Browser($connector);
+    $browser = new React\Http\Browser($connector, $loop);
     $wsdl = "https://{$master['vps_ip']}/HyperVService/HyperVService.asmx?WSDL";
     $browser->get($wsdl)->done(
         function (Psr\Http\Message\ResponseInterface $response) use ($browser, $master) {
@@ -27,6 +28,7 @@ try {
             echo 'Error: ' . $e->getMessage() . PHP_EOL;
         }
     );
+    $loop->run();
 } catch (Exception $e) {
     echo 'Caught exception: '.$e->getMessage().PHP_EOL;
 }
