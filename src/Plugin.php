@@ -73,13 +73,13 @@ class Plugin
          * @var \MyAdmin\Settings $settings
          **/
         $settings = $event->getSubject();
+        $settings->setTarget('module');
         $settings->add_text_setting(self::$module, _('Credentials'), 'vps_hyperv_password', _('HyperV Administrator Password'), _('Administrative password to login to the HyperV server'), $settings->get_setting('VPS_HYPERV_PASSWORD'));
         $settings->add_text_setting(self::$module, _('Slice Costs'), 'vps_slice_hyperv_cost', _('HyperV VPS Cost Per Slice'), _('HyperV VPS will cost this much for 1 slice.'), $settings->get_setting('VPS_SLICE_HYPERV_COST'));
         $settings->add_text_setting(self::$module, _('Slice HyperV Amounts'), 'vps_slice_hyperv_io_min_base', 'IOPS Min Base Value', _('The Base value before factoring in slice counts.'), $settings->get_setting('VPS_SLICE_HYPERV_IO_MIN_BASE'));
         $settings->add_text_setting(self::$module, _('Slice HyperV Amounts'), 'vps_slice_hyperv_io_min_mult', 'IOPS Min Slice Multiplier', _('This value multiplied by the number of slices added to the Base Value will give the Minimum IO value.'), $settings->get_setting('VPS_SLICE_HYPERV_IO_MIN_MULT'));
         $settings->add_text_setting(self::$module, _('Slice HyperV Amounts'), 'vps_slice_hyperv_io_max_base', 'IOPS Max Base Value', _('The Base value before factoring in slice counts.'), $settings->get_setting('VPS_SLICE_HYPERV_IO_MAX_BASE'));
         $settings->add_text_setting(self::$module, _('Slice HyperV Amounts'), 'vps_slice_hyperv_io_max_mult', 'IOPS Max Slice Multiplier', _('This value multiplied by the number of slices added to the Base Value will give the Maximum IO value.'), $settings->get_setting('VPS_SLICE_HYPERV_IO_MAX_MULT'));
-        $settings->setTarget('module');
         $settings->add_select_master(_(self::$module), _('Default Servers'), self::$module, 'new_vps_hyperv_server', _('HyperV NJ Server'), NEW_VPS_HYPERV_SERVER, 11, 1);
         $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv', _('Out Of Stock HyperV Secaucus'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV'), ['0', '1'], ['No', 'Yes']);
         $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv_la', _('Out Of Stock HyperV LA'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV_LA'), ['0', '1'], ['No', 'Yes']);
