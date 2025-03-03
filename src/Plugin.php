@@ -477,7 +477,7 @@ class Plugin
             $soap = new \SoapClient($url, $params);
             $response = $soap->UpdateVM($update_parameters);
             \StatisticClient::report('Hyper-V', 'UpdateVM', true, 0, '', STATISTICS_SERVER);
-            myadmin_log('hyperv', 'info', 'UpdateVM returned '.json_encode($response->UpdateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+            myadmin_log('hyperv', 'info', 'UpdateVM ".json_encode($update_parameters)." returned '.json_encode($response->UpdateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if (isset($response->UpdateVMResult->Status)) {
                 $status = $response->UpdateVMResult->Status;
             } else {
