@@ -558,7 +558,7 @@ class Plugin
                 unset($getvm_response);
                 $getvm_response = $soap->GetVM($parameters);
                 \StatisticClient::report('Hyper-V', 'GetVM', true, 0, '', STATISTICS_SERVER);
-                myadmin_log('hyperv', 'info', "GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} got {$getvm_response->GetVMResult->Status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+                myadmin_log('hyperv', 'info', "[{$loop}/{$maxLoop}] GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} got {$getvm_response->GetVMResult->Status}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 if (isset($getvm_response->GetVMResult->IP) && trim($getvm_response->GetVMResult->IP) != '') {
                     $current_ip = trim($getvm_response->GetVMResult->IP);
                     break;
@@ -570,7 +570,7 @@ class Plugin
                 }
                 */
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'warning', "GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+                myadmin_log('hyperv', 'warning', "[{$loop}/{$maxLoop}] GetVM {$serviceInfo['id']} : {$serviceInfo['vzid']} Caught exception: " . $e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 \StatisticClient::report('Hyper-V', 'GetVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
                 //return false;
             }
