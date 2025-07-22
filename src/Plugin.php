@@ -84,6 +84,7 @@ class Plugin
         $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv', _('Out Of Stock HyperV Secaucus'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV'), ['0', '1'], ['No', 'Yes']);
         $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv_la', _('Out Of Stock HyperV LA'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV_LA'), ['0', '1'], ['No', 'Yes']);
         $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv_ny', _('Out Of Stock HyperV NY'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV_NY'), ['0', '1'], ['No', 'Yes']);
+        $settings->add_dropdown_setting(self::$module, _('Out of Stock'), 'outofstock_hyperv_tx', _('Out Of Stock HyperV TX'), _('Enable/Disable Sales Of This Type'), $settings->get_setting('OUTOFSTOCK_HYPERV_TX'), ['0', '1'], ['No', 'Yes']);
         $settings->setTarget('global');
     }
 
