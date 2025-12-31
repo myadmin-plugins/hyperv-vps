@@ -161,6 +161,7 @@ class Plugin
                 'vmName' => $serviceInfo['vps_hostname'],
                 'vhdSize' => 1 * ((VPS_SLICE_HD * $serviceInfo['vps_slices']) + $serviceInfo['settings']['additional_hd']),
                 'ramSize' => 1 * VPS_SLICE_RAM * $serviceInfo['vps_slices'],
+                'dynamicMemorySliceValue' => 0,
                 'osToInstall' => $serviceInfo['vps_os'],
                 'hyperVAdmin' => 'Administrator',
                 'adminPassword' => $serviceInfo['server_info']['vps_root']
@@ -327,6 +328,7 @@ class Plugin
             'vmName' => $vzname,
             'vhdSize' => $diskspace,
             'ramSize' => $memory,
+            'dynamicMemorySliceValue' => 0,
             'osToInstall' => $serviceInfo['vps_os'],
             'hyperVAdmin' => 'Administrator',
             'adminPassword' => $serviceInfo['server_info']['vps_root']
