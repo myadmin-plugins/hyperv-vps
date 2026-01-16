@@ -380,6 +380,9 @@ class Plugin
                 \StatisticClient::report('Hyper-V', 'CreateVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             }
         }
+        if ($response->CreateVMResult->Success == false) {
+            return false;
+        }
         //$response = $soap->CreateVirtualMachine($create_parameters);
         $progress = 50;
         $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
