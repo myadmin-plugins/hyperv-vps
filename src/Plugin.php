@@ -546,7 +546,7 @@ class Plugin
         $current_ip = false;
         $maxLoop = 100;
         $loop = 0;
-        while ($current_ip === false || $current_ip = '' || $loop >= $maxLoop) {
+        while (in_array($current_ip, [false, '']) && $loop <= $maxLoop) {
             $loop++;
             sleep(20);
             //myadmin_log('hyperv', 'info', "(" . str_replace("\n", "", json_encode($getvm_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
