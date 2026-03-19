@@ -1,28 +1,42 @@
-# Hyperv Vps Class
+# MyAdmin Hyper-V VPS Plugin
 
-Hyperv Vps Class
+[![Tests](https://github.com/detain/myadmin-hyperv-vps/actions/workflows/tests.yml/badge.svg)](https://github.com/detain/myadmin-hyperv-vps/actions/workflows/tests.yml)
+[![Latest Stable Version](https://poser.pugx.org/detain/myadmin-hyperv-vps/version)](https://packagist.org/packages/detain/myadmin-hyperv-vps)
+[![Total Downloads](https://poser.pugx.org/detain/myadmin-hyperv-vps/downloads)](https://packagist.org/packages/detain/myadmin-hyperv-vps)
+[![License](https://poser.pugx.org/detain/myadmin-hyperv-vps/license)](https://packagist.org/packages/detain/myadmin-hyperv-vps)
 
-## Build Status and Code Analysis
+A MyAdmin plugin for managing Microsoft Hyper-V virtual private servers. This package provides full lifecycle management of Hyper-V VPS instances including provisioning, configuration, power control, disk resizing, IOPS management, and teardown through a SOAP-based API integration.
 
-Site          | Status
---------------|---------------------------
-![Travis-CI](http://i.is.cc/storage/GYd75qN.png "Travis-CI")     | [![Build Status](https://travis-ci.org/detain/myadmin-hyperv-vps.svg?branch=master)](https://travis-ci.org/detain/myadmin-hyperv-vps)
-![CodeClimate](http://i.is.cc/storage/GYlageh.png "CodeClimate")  | [![Code Climate](https://codeclimate.com/github/detain/myadmin-hyperv-vps/badges/gpa.svg)](https://codeclimate.com/github/detain/myadmin-hyperv-vps) [![Test Coverage](https://codeclimate.com/github/detain/myadmin-hyperv-vps/badges/coverage.svg)](https://codeclimate.com/github/detain/myadmin-hyperv-vps/coverage) [![Issue Count](https://codeclimate.com/github/detain/myadmin-hyperv-vps/badges/issue_count.svg)](https://codeclimate.com/github/detain/myadmin-hyperv-vps)
-![Scrutinizer](http://i.is.cc/storage/GYeUnux.png "Scrutinizer")   | [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/myadmin-plugins/hyperv-vps/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/myadmin-plugins/hyperv-vps/?branch=master) [![Code Coverage](https://scrutinizer-ci.com/g/myadmin-plugins/hyperv-vps/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/myadmin-plugins/hyperv-vps/?branch=master) [![Build Status](https://scrutinizer-ci.com/g/myadmin-plugins/hyperv-vps/badges/build.png?b=master)](https://scrutinizer-ci.com/g/myadmin-plugins/hyperv-vps/build-status/master)
-![Codacy](http://i.is.cc/storage/GYi66Cx.png "Codacy")        | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/226251fc068f4fd5b4b4ef9a40011d06)](https://www.codacy.com/app/detain/myadmin-hyperv-vps) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/25fa74eb74c947bf969602fcfe87e349)](https://www.codacy.com/app/detain/myadmin-hyperv-vps?utm_source=github.com&utm_medium=referral&utm_content=detain/myadmin-hyperv-vps&utm_campaign=Badge_Coverage)
-![Coveralls](http://i.is.cc/storage/GYjNSim.png "Coveralls")    | [![Coverage Status](https://coveralls.io/repos/github/detain/db_abstraction/badge.svg?branch=master)](https://coveralls.io/github/detain/myadmin-hyperv-vps?branch=master)
-![Packagist](http://i.is.cc/storage/GYacBEX.png "Packagist")     | [![Latest Stable Version](https://poser.pugx.org/detain/myadmin-hyperv-vps/version)](https://packagist.org/packages/detain/myadmin-hyperv-vps) [![Total Downloads](https://poser.pugx.org/detain/myadmin-hyperv-vps/downloads)](https://packagist.org/packages/detain/myadmin-hyperv-vps) [![Latest Unstable Version](https://poser.pugx.org/detain/myadmin-hyperv-vps/v/unstable)](//packagist.org/packages/detain/myadmin-hyperv-vps) [![Monthly Downloads](https://poser.pugx.org/detain/myadmin-hyperv-vps/d/monthly)](https://packagist.org/packages/detain/myadmin-hyperv-vps) [![Daily Downloads](https://poser.pugx.org/detain/myadmin-hyperv-vps/d/daily)](https://packagist.org/packages/detain/myadmin-hyperv-vps) [![License](https://poser.pugx.org/detain/myadmin-hyperv-vps/license)](https://packagist.org/packages/detain/myadmin-hyperv-vps)
+## Features
 
+- Virtual machine creation with configurable RAM, disk, and OS template
+- Power management (start, stop, reboot, pause, resume)
+- Dynamic CPU and memory resizing via slice-based allocation
+- IOPS rate limiting with configurable min/max thresholds
+- Automated IP assignment and network configuration
+- Administrator password management
+- Event-driven architecture using Symfony EventDispatcher
+- Queue-based operation sequencing for multi-step workflows
 
 ## Installation
-
-Install with composer like
 
 ```sh
 composer require detain/myadmin-hyperv-vps
 ```
 
+## Requirements
+
+- PHP >= 5.0
+- ext-soap
+- Symfony EventDispatcher ^5.0
+
+## Running Tests
+
+```sh
+composer install
+vendor/bin/phpunit
+```
+
 ## License
 
-The Hyperv Vps Class class is licensed under the LGPL-v2.1 license.
-
+This package is licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html) license.

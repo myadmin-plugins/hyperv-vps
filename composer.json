@@ -1,21 +1,25 @@
 {
 	"name": "detain/myadmin-hyperv-vps",
 	"type": "myadmin-plugin",
-	"description": "Hyperv Vps Class",
+	"description": "MyAdmin HyperV VPS plugin providing integration with Microsoft Hyper-V for virtual machine provisioning, management, and lifecycle operations including create, delete, resize, and IOPS configuration via SOAP-based API.",
 	"keywords": [
 		"hyperv",
+		"hyper-v",
+		"vps",
+		"virtualization",
 		"administration",
-		"license"
+		"myadmin",
+		"plugin"
 	],
 	"license": "LGPL-2.1-only",
 	"authors": [
 		{
 			"name": "Joe Huss",
-			"homepage": "https:\/\/my.interserver.net\/"
+			"homepage": "https://my.interserver.net/"
 		}
 	],
 	"config": {
-		"bin-dir": "vendor\/bin",
+		"bin-dir": "vendor/bin",
 		"minimum-stability": "dev"
 	},
 	"require": {
@@ -23,18 +27,18 @@
 		"ext-soap": "*",
 		"symfony/event-dispatcher": "^5.0@stable",
 		"detain/myadmin-plugin-installer": "dev-master"
-    },
+	},
 	"require-dev": {
-		"phpunit/phpunit": "*",
-		"phpunit/phpunit-mock-objects": "*",
-		"vlucas/phpdotenv": "*",
-		"codeclimate/php-test-reporter": "dev-master",
-		"satooshi/php-coveralls": "*",
-		"codacy/coverage": "dev-master"
+		"phpunit/phpunit": "^9.6"
 	},
 	"autoload": {
 		"psr-4": {
 			"Detain\\MyAdminHyperv\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Detain\\MyAdminHyperv\\Tests\\": "tests/"
 		}
 	}
 }
