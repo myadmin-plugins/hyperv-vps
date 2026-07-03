@@ -772,7 +772,7 @@ class Plugin
             } elseif (isset($pass_respopassword) && $pass_respopassword->SetVMAdminPasswordResult->Success == 1) {
                 myadmin_log('hyperv', 'info', "SetVMAdminPassword {$serviceInfo['vzid']} Successful", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 $finished = true;
-                if ($pass != $serviceInfo['origrootpass']) {
+                if (trim((string)$pass) !== '') {
                     $db->query(
                         make_insert_query('history_log', [
                         'history_id' => null,
@@ -788,6 +788,7 @@ class Plugin
                         __LINE__,
                         __FILE__
                     );
+                    $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_rootpass='" . $db->real_escape($pass) . "' where {$settings['PREFIX']}_id='" . (int)$serviceInfo['vps_id'] . "'", __LINE__, __FILE__);
                 }
                 vps_windows_welcome_email($serviceInfo['vps_id'], self::$module);
                 continue;
