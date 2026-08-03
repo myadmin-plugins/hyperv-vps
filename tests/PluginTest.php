@@ -622,12 +622,10 @@ class PluginTest extends TestCase
         if (!defined('VPS_HYPERV_PASSWORD')) {
             define('VPS_HYPERV_PASSWORD', 'OldPassword123');
         }
-        if (!function_exists('vps_get_password')) {
-            function vps_get_password($id, $custid)
-            {
-                return 'generated-pass-' . $id;
-            }
-        }
+
+        // vps_get_password() is stubbed in tests/stubs.php, under the
+        // Detain\MyAdminHyperv namespace. Defining it here would land it in
+        // Detain\MyAdminHyperv\Tests, where Plugin.php can never see it.
 
         $result = \Detain\MyAdminHyperv\Plugin::getSoapCallParams('SetVMAdminPassword', $serviceInfo);
 
@@ -640,7 +638,11 @@ class PluginTest extends TestCase
         $this->assertArrayHasKey('username', $result);
         $this->assertSame('Administrator', $result['username']);
         $this->assertArrayHasKey('existingPassword', $result);
+        $this->assertSame(VPS_HYPERV_PASSWORD, $result['existingPassword']);
+        // newPassword must come from vps_get_password(vps_id, vps_custid) --
+        // asserting the value proves both arguments are passed, in that order.
         $this->assertArrayHasKey('newPassword', $result);
+        $this->assertSame('generated-pass-42-100', $result['newPassword']);
     }
 
     // ---------------------------------------------------------------

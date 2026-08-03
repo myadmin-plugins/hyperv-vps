@@ -179,7 +179,9 @@ class Plugin
         } elseif ($call == 'UpdateVM') {
             return [
                 'vmId' => $serviceInfo['vps_vzid'],
-                'cpuCores' => ceil((($serviceInfo['vps_slices'] - 2) / 2) + 1),
+                // ceil() returns a float; cpuCores is a whole-number core count,
+                // so cast it like the sibling integer fields (ramMB, minimumOps).
+                'cpuCores' => (int) ceil((($serviceInfo['vps_slices'] - 2) / 2) + 1),
                 'ramMB' => 1 * VPS_SLICE_RAM * $serviceInfo['vps_slices'],
                 'bootFromCD' => false,
                 'numLockEnabled' => true,
@@ -475,7 +477,8 @@ class Plugin
         $extra['response'] = $response;
         $update_parameters = [
             'vmId' => $serviceInfo['vzid'],
-            'cpuCores' => ceil((($serviceInfo['vps_slices'] - 2) / 2) + 1),
+            // ceil() returns a float; cpuCores is a whole-number core count.
+            'cpuCores' => (int) ceil((($serviceInfo['vps_slices'] - 2) / 2) + 1),
             'ramMB' => 1 * VPS_SLICE_RAM * $serviceInfo['vps_slices'],
             'bootFromCD' => false,
             'numLockEnabled' => true,
