@@ -220,6 +220,7 @@ class Plugin
                 'hyperVAdmin' => 'Administrator',
                 'adminPassword' => $serviceInfo['server_info']['vps_root']
             ];
+            return $ip_parameters;
         } elseif (in_array($call, ['GetVMList'])) {
             return [
                 'hyperVAdmin' => 'Administrator',

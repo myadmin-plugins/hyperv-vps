@@ -552,6 +552,67 @@ class PluginTest extends TestCase
 
     /**
      * @test
+     * Verify getSoapCallParams returns the parameters it builds for AddPublicIp.
+     *
+     * Until 2026-08-03 this branch assigned $ip_parameters and then fell off the
+     * end of the elseif chain without returning it, so every AddPublicIp call
+     * got null — after having already run a DB query and an ipcalc(). Any caller
+     * would have passed null into the SOAP request instead of the IP config.
+     */
+    public function getSoapCallParamsAddPublicIpReturnsIpParameters(): void
+    {
+        $GLOBALS['hyperv_test_db'] = new FakeDb(['vlans_networks' => '203.0.113.0/24']);
+        $serviceInfo = $this->createMinimalServiceInfo();
+        $serviceInfo['vps_vzid'] = 'vm-uuid-addip';
+        $serviceInfo['vps_ip'] = '203.0.113.55';
+        $serviceInfo['server_info']['vps_root'] = 'rootpass';
+
+        $result = \Detain\MyAdminHyperv\Plugin::getSoapCallParams('AddPublicIp', $serviceInfo);
+
+        $this->assertIsArray($result, 'AddPublicIp must return the parameters it built');
+        $this->assertSame([
+            'vmId' => 'vm-uuid-addip',
+            'ip' => '203.0.113.55',
+            'defaultGateways' => '203.0.113.1',
+            'subnets' => '255.255.255.0',
+            'dns' => ['8.8.8.8', '8.8.4.4'],
+            'hyperVAdmin' => 'Administrator',
+            'adminPassword' => 'rootpass',
+        ], $result);
+    }
+
+    /**
+     * @test
+     * Verify the AddPublicIp branch derives its gateway/netmask from the vlan row.
+     *
+     * The colon strip matters: vlans_networks is stored with colons that ipcalc()
+     * cannot parse, so a regression there would silently yield a bad subnet
+     * rather than an error.
+     */
+    public function getSoapCallParamsAddPublicIpLooksUpVlanAndStripsColons(): void
+    {
+        $GLOBALS['hyperv_test_db'] = new FakeDb(['vlans_networks' => '203.0.113.0:/:24']);
+        $GLOBALS['hyperv_test_requirements'] = [];
+        $GLOBALS['hyperv_test_ipcalc_args'] = [];
+        $GLOBALS['hyperv_test_db_modules'] = [];
+        $serviceInfo = $this->createMinimalServiceInfo();
+        $serviceInfo['vps_ip'] = '203.0.113.55';
+
+        \Detain\MyAdminHyperv\Plugin::getSoapCallParams('AddPublicIp', $serviceInfo);
+
+        $this->assertSame(['default'], $GLOBALS['hyperv_test_db_modules']);
+        $this->assertSame(['ipcalc'], $GLOBALS['hyperv_test_requirements'], 'ipcalc must be lazy-loaded first');
+        $this->assertSame(['203.0.113.0/24'], $GLOBALS['hyperv_test_ipcalc_args']);
+        $this->assertCount(1, $GLOBALS['hyperv_test_db']->queries);
+        $this->assertStringContainsString(
+            "ips_ip='203.0.113.55'",
+            $GLOBALS['hyperv_test_db']->queries[0],
+            'the vlan lookup must be scoped to this service IP'
+        );
+    }
+
+    /**
+     * @test
      * Verify getSoapCallParams for ResizeVMHardDrive includes drive size and credentials.
      */
     public function getSoapCallParamsResizeVMHardDriveIncludesDriveSize(): void
