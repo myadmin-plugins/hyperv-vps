@@ -1,6 +1,6 @@
 ---
 name: hyperv-phpunit-test
-description: Writes PHPUnit 9.6 test cases in tests/PluginTest.php under namespace Detain\MyAdminHyperv\Tests\. Use when user says 'write a test', 'add test coverage', 'test this method', or modifies src/Plugin.php. Bootstraps via vendor/autoload.php, references phpunit.xml.dist config. Do NOT use for integration tests against live Hyper-V hosts or bin/ script testing. NOTE: for a plugin's contract/behavioral tests (tests/ContractTest.php, the shared harness, composer myadmin:scaffold-tests) use the plugin-contract-tests skill instead — this skill's reflection-only guidance predates that harness.
+description: Writes PHPUnit 9.6 test cases in tests/PluginTest.php under namespace Detain\MyAdminHyperv\Tests\. Use when user says 'write a test', 'add test coverage', 'test this method', or modifies src/Plugin.php. Bootstraps via vendor/autoload.php, references phpunit.xml.dist config. Do NOT use for integration tests against live Hyper-V hosts or bin/ script testing. For a plugin's contract or behavioral tests (tests/ContractTest.php, the shared harness, composer myadmin:scaffold-tests) use the plugin-contract-tests skill instead — this skill's reflection-only guidance predates that harness.
 ---
 <!-- myadmin-contract-harness-notice -->
 > ### ⚠️ Read this before the rest of the file
