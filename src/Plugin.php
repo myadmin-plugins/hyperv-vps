@@ -236,6 +236,28 @@ class Plugin
     }
 
     /**
+     * Returns a copy of SOAP call parameters that is safe to log: every
+     * password field (adminPassword, hyperVAdminPassword, newPassword, ...)
+     * is replaced. The parameters actually sent are not changed.
+     *
+     * @param array $params
+     * @return array
+     */
+    public static function redactParams(array $params)
+    {
+        foreach ($params as $key => $value) {
+            if (is_string($key) && preg_match('/pass|pwd|secret/i', $key) === 1) {
+                if ($value !== '' && $value !== null) {
+                    $params[$key] = '[redacted]';
+                }
+            } elseif (is_array($value)) {
+                $params[$key] = self::redactParams($value);
+            }
+        }
+        return $params;
+    }
+
+    /**
      * gets the connection URL for the SoapClient
      *
      * @param string $address the ip address or domain name of the remote APi server
@@ -381,7 +403,7 @@ class Plugin
                 \StatisticClient::report('Hyper-V', 'CreateVM', true, 0, '', STATISTICS_SERVER);
             }
         } catch (\Exception $e) {
-            myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode($create_parameters).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+            myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode(self::redactParams($create_parameters)).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if (class_exists(\StatisticClient::class, false)) {
                 \StatisticClient::report('Hyper-V', 'CreateVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
             }
@@ -419,7 +441,7 @@ class Plugin
                 myadmin_log('hyperv', 'info', json_encode($response->CreateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 myadmin_log('hyperv', 'info', $response->CreateVMResult->Status, __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             } catch (\Exception $e) {
-                myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode($create_parameters).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+                myadmin_log('hyperv', 'info', 'CreateVM( '.json_encode(self::redactParams($create_parameters)).' ) Caught exception: '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 if (class_exists(\StatisticClient::class, false)) {
                     \StatisticClient::report('Hyper-V', 'CreateVM', false, $e->getCode(), $e->getMessage(), STATISTICS_SERVER);
                 }
@@ -527,7 +549,7 @@ class Plugin
             'adminPassword' => $serviceInfo['server_info']['vps_root']
         ];
         /*
-        myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+        myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode(self::redactParams($ip_parameters))) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         try {
             $response = $soap->AddPublicIp($ip_parameters);
         } catch (\Exception $e) {
@@ -544,7 +566,7 @@ class Plugin
             if (class_exists(\StatisticClient::class, false)) {
                 \StatisticClient::report('Hyper-V', 'UpdateVM', true, 0, '', STATISTICS_SERVER);
             }
-            myadmin_log('hyperv', 'info', 'UpdateVM '.json_encode($update_parameters).' returned '.json_encode($response->UpdateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+            myadmin_log('hyperv', 'info', 'UpdateVM '.json_encode(self::redactParams($update_parameters)).' returned '.json_encode($response->UpdateVMResult), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if (isset($response->UpdateVMResult->Status)) {
                 $status = $response->UpdateVMResult->Status;
             } else {
@@ -609,8 +631,8 @@ class Plugin
             return false;
         }
         /*
-        //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
-        myadmin_log('hyperv', 'info', "AddPublicIp(" . json_encode($ip_parameters) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+        //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode(self::redactParams($ip_parameters))) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+        myadmin_log('hyperv', 'info', "AddPublicIp(" . json_encode(self::redactParams($ip_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         try {
             $ip_response = $soap->AddPublicIp($ip_parameters);
         } catch (\Exception $e) {
@@ -665,7 +687,7 @@ class Plugin
             $db->query("update vps set vps_server_status='{$progress}' where vps_id={$serviceInfo['id']}", __LINE__, __FILE__);
         }
         if ($current_ip != $serviceInfo['ip']) {
-            //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode($ip_parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+            //myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode(self::redactParams($ip_parameters))) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if (class_exists(\StatisticClient::class, false)) {
                 \StatisticClient::tick('Hyper-V', 'AddPublicIp');
             }
@@ -711,7 +733,7 @@ class Plugin
                 if (class_exists(\StatisticClient::class, false)) {
                     \StatisticClient::report('Hyper-V', 'SetVMAdminPassword', true, 0, '', STATISTICS_SERVER);
                 }
-                myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, {$serviceInfo['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+                myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, [redacted]) = " . json_encode($pass_respopassword), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 if (isset($pass_respopassword->SetVMAdminPasswordResult->Status)) {
                     $status = trim($pass_respopassword->SetVMAdminPasswordResult->Status);
                 } else {
@@ -737,7 +759,7 @@ class Plugin
                 $exception = false;
                 $pass = generateRandomString(10, 2, 2, 1, 1);
                 $password_parameters['newPassword'] = $pass;
-                myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} Assuming password not complex enough , setting it to a random password, SetVMAdminPassword new pass {$pass}", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+                myadmin_log('hyperv', 'warning', "SetVMAdminPassword {$serviceInfo['vzid']} Assuming password not complex enough , setting it to a random password", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 if (class_exists(\StatisticClient::class, false)) {
                     \StatisticClient::tick('Hyper-V', 'SetVMAdminPassword');
                 }
@@ -809,7 +831,7 @@ class Plugin
             if (class_exists(\StatisticClient::class, false)) {
                 \StatisticClient::report('Hyper-V', 'SetVMAdminPassword', true, 0, '', STATISTICS_SERVER);
             }
-            myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, {$serviceInfo['origrootpass']}) = " . json_encode($pass_respopassword), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
+            myadmin_log('hyperv', 'info', "SetVMAdminPassword ({$serviceInfo['vzid']}, [redacted]) = " . json_encode($pass_respopassword), __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
             if (isset($pass_respopassword->SetVMAdminPasswordResult->Status)) {
                 $status = trim($pass_respopassword->SetVMAdminPasswordResult->Status);
             } else {
