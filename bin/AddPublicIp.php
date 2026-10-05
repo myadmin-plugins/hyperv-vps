@@ -22,7 +22,7 @@ try {
             'subnets' => '255.255.255.248',
             'dns' => ['8.8.8.8', '8.8.4.4'],
             'hyperVAdmin' => 'Administrator',
-            'adminPassword' => $master['vps_root']
+            'adminPassword' => \Detain\MyAdminHyperv\Plugin::hostPassword($master)
         ]
     );
     print_r($response);

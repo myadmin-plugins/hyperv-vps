@@ -164,7 +164,7 @@ class Plugin
                 'vmId' => $serviceInfo['vps_vzid'],
                 'updatedDriveSizeInGigabytes' => 1 * ((VPS_SLICE_HD * $serviceInfo['vps_slices']) + $serviceInfo['settings']['additional_hd']),
                 'hyperVAdminUsername' => 'Administrator',
-                'hyperVAdminPassword' => $serviceInfo['server_info']['vps_root'],
+                'hyperVAdminPassword' => self::hostPassword($serviceInfo['server_info']),
             ];
         } elseif ($call == 'CreateVM') {
             return [
@@ -174,7 +174,7 @@ class Plugin
                 'dynamicMemorySliceValue' => 0,
                 'osToInstall' => $serviceInfo['vps_os'],
                 'hyperVAdmin' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root']
+                'adminPassword' => self::hostPassword($serviceInfo['server_info'])
             ];
         } elseif ($call == 'UpdateVM') {
             return [
@@ -186,7 +186,7 @@ class Plugin
                 'bootFromCD' => false,
                 'numLockEnabled' => true,
                 'hyperVAdmin' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root']
+                'adminPassword' => self::hostPassword($serviceInfo['server_info'])
             ];
         } elseif ($call == 'SetVMIOPS') {
             return [
@@ -194,12 +194,12 @@ class Plugin
                 'minimumOps' => VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $serviceInfo['vps_slices']),
                 'maximumOps' => VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $serviceInfo['vps_slices']),
                 'adminUsername' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root']
+                'adminPassword' => self::hostPassword($serviceInfo['server_info'])
             ];
         } elseif ($call == 'SetVMAdminPassword') {
             return [
                 'adminUser' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root'],
+                'adminPassword' => self::hostPassword($serviceInfo['server_info']),
                 'vmId' => $serviceInfo['vps_vzid'],
                 'username' => 'Administrator',
                 'existingPassword' => VPS_HYPERV_PASSWORD,
@@ -218,19 +218,19 @@ class Plugin
                 'subnets' => $ipinfo['netmask'],
                 'dns' => ['8.8.8.8', '8.8.4.4'],
                 'hyperVAdmin' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root']
+                'adminPassword' => self::hostPassword($serviceInfo['server_info'])
             ];
             return $ip_parameters;
         } elseif (in_array($call, ['GetVMList'])) {
             return [
                 'hyperVAdmin' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root']
+                'adminPassword' => self::hostPassword($serviceInfo['server_info'])
             ];
         } else {
             return [
                 'vmId' => $serviceInfo['vps_vzid'],
                 'hyperVAdmin' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root']
+                'adminPassword' => self::hostPassword($serviceInfo['server_info'])
             ];
         }
     }
@@ -273,6 +273,53 @@ class Plugin
      *
      * @return array an array of the connection parameters for Soapclient
      */
+    /**
+     * The Hyper-V host's Administrator password (vps_master_details.vps_root of
+     * a get_service_master() row), opened right before a SOAP call (MyAdmin
+     * plan_2way §5.11, Q40). Plaintext comes back exactly as stored; a SecretBox
+     * envelope is opened, and one that will not open throws, so it is never sent
+     * to a host. A core tree without the class gets the stored value, as before.
+     *
+     * @param array<string,mixed> $master
+     * @return mixed
+     */
+    public static function hostPassword(array $master)
+    {
+        if (!class_exists('MyAdmin\\Security\\ServiceSecrets')) {
+            return $master['vps_root'] ?? null;
+        }
+        return \MyAdmin\Security\ServiceSecrets::readColumn('vps_master_details', 'vps_root', $master['vps_id'] ?? '', isset($master['vps_root']) ? (string)$master['vps_root'] : null);
+    }
+
+    /**
+     * The history_old_value of the raw `password` history row: sealed once core's
+     * service_password_log write flag is on, the plaintext (today's row) otherwise
+     * or on a core tree that predates the hook.
+     *
+     * @param int|string $serviceId
+     */
+    private static function historyPassword(string $section, $serviceId, string $pass, int $owner): string
+    {
+        $ss = 'MyAdmin\\Security\\ServiceSecrets';
+        if (class_exists($ss) && method_exists($ss, 'historyWriteEnabled') && $ss::historyWriteEnabled('service_password_log', $section)) {
+            [, $pass] = \MyAdmin\App::secrets()->sealHistory($section, 'password', (string)$serviceId, $pass, $owner);
+        }
+        return $pass;
+    }
+
+    /**
+     * The value the {PREFIX}_rootpass UPDATE writes: sealed for this VPS once core's
+     * vps_rootpass write flag is on, the plaintext otherwise or on an older core tree.
+     */
+    private static function rootpassValue(string $table, string $column, int $id, string $pass): string
+    {
+        $ss = 'MyAdmin\\Security\\ServiceSecrets';
+        if (class_exists($ss) && method_exists($ss, 'updateValue')) {
+            return (string)$ss::updateValue($table, $column, $id, $pass);
+        }
+        return $pass;
+    }
+
     public static function getSoapClientParams()
     {
         $context = stream_context_create([
@@ -319,7 +366,7 @@ class Plugin
             $parameters = [
                 'vmId' => $serviceInfo['vps_vzid'],
                 'hyperVAdmin' => 'Administrator',
-                'adminPassword' => $serviceInfo['server_info']['vps_root']
+                'adminPassword' => self::hostPassword($serviceInfo['server_info'])
             ];
             if (class_exists(\StatisticClient::class, false)) {
                 \StatisticClient::tick('Hyper-V', 'TurnOff');
@@ -374,7 +421,7 @@ class Plugin
             'dynamicMemorySliceValue' => 0,
             'osToInstall' => $serviceInfo['vps_os'],
             'hyperVAdmin' => 'Administrator',
-            'adminPassword' => $serviceInfo['server_info']['vps_root']
+            'adminPassword' => self::hostPassword($serviceInfo['server_info'])
         ];
         myadmin_log('hyperv', 'info', "CreateVM({$vzname}, {$diskspace}, {$memory}, {$serviceInfo['vps_os']})", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         $serviceInfo['vzid'] = '';
@@ -466,7 +513,7 @@ class Plugin
                 $soap = new \SoapClient($url, $params);
                 $response = $soap->GetVMList([
                     'hyperVAdmin' => 'Administrator',
-                    'adminPassword' => $serviceInfo['server_info']['vps_root']
+                    'adminPassword' => self::hostPassword($serviceInfo['server_info'])
                 ]);
                 if (class_exists(\StatisticClient::class, false)) {
                     \StatisticClient::report('Hyper-V', 'GetVMList', true, 0, '', STATISTICS_SERVER);
@@ -506,14 +553,14 @@ class Plugin
             'bootFromCD' => false,
             'numLockEnabled' => true,
             'hyperVAdmin' => 'Administrator',
-            'adminPassword' => $serviceInfo['server_info']['vps_root']
+            'adminPassword' => self::hostPassword($serviceInfo['server_info'])
         ];
         $iops_parameters = [
             'vmId' => $serviceInfo['vzid'],
             'minimumOps' => VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $serviceInfo['vps_slices']),
             'maximumOps' => VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $serviceInfo['vps_slices']),
             'adminUsername' => 'Administrator',
-            'adminPassword' => $serviceInfo['server_info']['vps_root']
+            'adminPassword' => self::hostPassword($serviceInfo['server_info'])
         ];
         myadmin_log('hyperv', 'info', "SetVMIOPS({$serviceInfo['vzid']}, " . (VPS_SLICE_HYPERV_IO_MIN_BASE + (VPS_SLICE_HYPERV_IO_MIN_MULT * $serviceInfo['vps_slices'])).','.(VPS_SLICE_HYPERV_IO_MAX_BASE + (VPS_SLICE_HYPERV_IO_MAX_MULT * $serviceInfo['vps_slices'])).')', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         if (class_exists(\StatisticClient::class, false)) {
@@ -546,7 +593,7 @@ class Plugin
             'subnets' => $ipinfo['netmask'],
             'dns' => ['8.8.8.8', '8.8.4.4'],
             'hyperVAdmin' => 'Administrator',
-            'adminPassword' => $serviceInfo['server_info']['vps_root']
+            'adminPassword' => self::hostPassword($serviceInfo['server_info'])
         ];
         /*
         myadmin_log('hyperv', 'info', "AddPublicIp(" . str_replace("\n", "", json_encode(self::redactParams($ip_parameters))) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
@@ -580,7 +627,7 @@ class Plugin
             }
         }
         $parameters = [
-            'vmId' => $serviceInfo['vzid'], 'hyperVAdmin' => 'Administrator', 'adminPassword' => $serviceInfo['server_info']['vps_root']
+            'vmId' => $serviceInfo['vzid'], 'hyperVAdmin' => 'Administrator', 'adminPassword' => self::hostPassword($serviceInfo['server_info'])
         ];
         //myadmin_log('hyperv', 'info', "TurnON(" . str_replace("\n", "", json_encode($parameters)) . ")", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
         myadmin_log('hyperv', 'info', "TurnON({$serviceInfo['vzid']})", __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
@@ -658,7 +705,7 @@ class Plugin
                 $parameters = [
                     'vmId' => $serviceInfo['vzid'],
                     'hyperVAdmin' => 'Administrator',
-                    'adminPassword' => $serviceInfo['server_info']['vps_root']
+                    'adminPassword' => self::hostPassword($serviceInfo['server_info'])
                 ];
                 unset($getvm_response);
                 $getvm_response = $soap->GetVM($parameters);
@@ -715,7 +762,7 @@ class Plugin
         $pass = $serviceInfo['origrootpass'];
         $password_parameters = [
             'adminUser' => 'Administrator',
-            'adminPassword' => $serviceInfo['server_info']['vps_root'],
+            'adminPassword' => self::hostPassword($serviceInfo['server_info']),
             'vmId' => $serviceInfo['vzid'],
             'username' => 'Administrator',
             'existingPassword' => 'H0wdy',
@@ -809,12 +856,14 @@ class Plugin
                         'history_section' => $settings['PREFIX'],
                         'history_type' => 'password',
                         'history_new_value' => $serviceInfo['vps_id'],
-                        'history_old_value' => $pass
+                        // sealed for this row once core's service_password_log write flag is on (MyAdmin plan_2way §5.1 H1); the raw
+                        // row keeps its own shape (creator = the customer, empty sid), so with the flag off it is today's row
+                        'history_old_value' => self::historyPassword($settings['PREFIX'], $serviceInfo['vps_id'], (string)$pass, (int)$serviceInfo['vps_custid'])
                     ]),
                         __LINE__,
                         __FILE__
                     );
-                    $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_rootpass='" . $db->real_escape($pass) . "' where {$settings['PREFIX']}_id='" . (int)$serviceInfo['vps_id'] . "'", __LINE__, __FILE__);
+                    $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_rootpass='" . $db->real_escape(self::rootpassValue($settings['TABLE'], $settings['PREFIX'].'_rootpass', (int)$serviceInfo['vps_id'], (string)$pass)) . "' where {$settings['PREFIX']}_id='" . (int)$serviceInfo['vps_id'] . "'", __LINE__, __FILE__);
                 }
                 vps_windows_welcome_email($serviceInfo['vps_id'], self::$module);
                 continue;

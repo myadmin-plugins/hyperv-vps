@@ -24,7 +24,7 @@ try {
         'minimumOps' => 2 + (2 * $db->Record['vps_slices']),
         'maximumOps' => 250 + (100 * $db->Record['vps_slices']),
         'adminUsername' => 'Administrator',
-        'adminPassword' => $master['vps_root']
+        'adminPassword' => \Detain\MyAdminHyperv\Plugin::hostPassword($master)
     ];
     echo 'Calling SetVMIOPS with a parameters '.print_r($parameters, true).PHP_EOL;
     $params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();

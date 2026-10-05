@@ -18,7 +18,7 @@ try {
         [
         'vmId' => $_SERVER['argv'][2],
         'hyperVAdmin' => 'Administrator',
-        'adminPassword' => $master['vps_root']
+        'adminPassword' => \Detain\MyAdminHyperv\Plugin::hostPassword($master)
         ]
     );
     print_r($response);

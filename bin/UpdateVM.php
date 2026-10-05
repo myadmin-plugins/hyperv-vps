@@ -14,7 +14,7 @@ $master = get_service_master($_SERVER['argv'][1], 'vps', true);
 try {
     $params = \Detain\MyAdminHyperv\Plugin::getSoapClientParams();
     $soap = new SoapClient("https://{$master['vps_ip']}/HyperVService/HyperVService.asmx?WSDL", $params);
-    $response = $soap->UpdateVM(['vmId' => $_SERVER['argv'][2], 'cpuCores' => $_SERVER['argv'][3], 'ramMB' => $_SERVER['argv'][4], 'bootFromCD' => false, 'numLockEnabled' => true, 'hyperVAdmin' => 'Administrator', 'adminPassword' => $master['vps_root']]);
+    $response = $soap->UpdateVM(['vmId' => $_SERVER['argv'][2], 'cpuCores' => $_SERVER['argv'][3], 'ramMB' => $_SERVER['argv'][4], 'bootFromCD' => false, 'numLockEnabled' => true, 'hyperVAdmin' => 'Administrator', 'adminPassword' => \Detain\MyAdminHyperv\Plugin::hostPassword($master)]);
     print_r($response);
 } catch (Exception $e) {
     echo 'Caught exception: '.$e->getMessage().PHP_EOL;

@@ -21,7 +21,7 @@ try {
             'ramSize' => $_SERVER['argv'][4],
             'osToInstall' => $_SERVER['argv'][5] ?? 'Windows2016Standard',
             'hyperVAdmin' => 'Administrator',
-            'adminPassword' => $master['vps_root']
+            'adminPassword' => \Detain\MyAdminHyperv\Plugin::hostPassword($master)
         ]
     );
     print_r($response);
