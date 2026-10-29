@@ -20,7 +20,7 @@ try {
         function (Psr\Http\Message\ResponseInterface $response) use ($browser, $master) {
             $client = new Clue\React\Soap\Client($browser, (string)$response->getBody());
             $proxy = new Clue\React\Soap\Proxy($client);
-            $proxy->CheckVMExists(['vmId' => $_SERVER['argv'][2], 'hyperVAdmin' => 'Administrator', 'adminPassword' => $master['vps_root']])->then(function ($result) {
+            $proxy->CheckVMExists(['vmId' => $_SERVER['argv'][2], 'hyperVAdmin' => 'Administrator', 'adminPassword' => \Detain\MyAdminHyperv\Plugin::hostPassword($master)])->then(function ($result) {
                 print_r($result->CheckVMExistsResult);
             });
         },

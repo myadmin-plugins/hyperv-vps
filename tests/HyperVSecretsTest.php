@@ -64,7 +64,7 @@ class HyperVSecretsTest extends TestCase
         $this->assertSame(17, substr_count($src, "self::hostPassword(\$serviceInfo['server_info'])"));
         $this->assertStringContainsString("'history_old_value' => self::historyPassword(\$settings['PREFIX'], \$serviceInfo['vps_id'], (string)\$pass, (int)\$serviceInfo['vps_custid'])", $src);
         $this->assertStringContainsString("real_escape(self::rootpassValue(\$settings['TABLE'], \$settings['PREFIX'].'_rootpass', (int)\$serviceInfo['vps_id'], (string)\$pass))", $src);
-        foreach (glob($root . '/bin/*.php') as $file) {
+        foreach (array_merge(glob($root . '/bin/*.php'), glob($root . '/bin/async/*.php')) as $file) {
             foreach (file($file) as $line) {
                 if (strpos($line, "\$master['vps_root']") !== false) {
                     $this->assertMatchesRegularExpression('~^\s*//~', $line, basename($file) . ' reads vps_root directly');
